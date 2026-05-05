@@ -1,3 +1,8 @@
+@@
+@@/* Nombres de modos de enfoque */
+@@\"focus.mode.donotdisturb\" = \"No molestar\";
+@@\"focus.mode.focus\" = \"Enfoque\";
+@@\"focus.mode.sleep\" = \"Descanso\";
 /* LampControl — Español */
 
 /* App */

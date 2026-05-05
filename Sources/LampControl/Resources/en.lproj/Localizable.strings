@@ -1,3 +1,8 @@
+@@
+@@/* Focus Mode Names */
+@@\"focus.mode.donotdisturb\" = \"Do Not Disturb\";
+@@\"focus.mode.focus\" = \"Focus\";
+@@\"focus.mode.sleep\" = \"Sleep\";
 /* LampControl — English */
 
 /* App */

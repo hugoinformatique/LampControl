@@ -34,6 +34,11 @@ final class AppState: ObservableObject {
     @Published var rooms: [Room] = []
     @Published var focusMappings: [FocusMapping] = []
     @Published var currentFocusIdentifier: String?
+@@    @Published var availableFocusModes: [FocusMode] = [
+@@        FocusMode(identifier: "do-not-disturb", displayName: NSLocalizedString("focus.mode.donotdisturb", comment: "")),
+@@        FocusMode(identifier: "focus", displayName: NSLocalizedString("focus.mode.focus", comment: "")),
+@@        FocusMode(identifier: "sleep", displayName: NSLocalizedString("focus.mode.sleep", comment: ""))
+@@    ]
 
     @Published var updateService = UpdateService()
 

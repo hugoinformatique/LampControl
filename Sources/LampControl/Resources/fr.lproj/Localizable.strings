@@ -1,3 +1,8 @@
+@@
+@@/* Noms des modes Focus */
+@@\"focus.mode.donotdisturb\" = \"Ne pas déranger\";
+@@\"focus.mode.focus\" = \"Focus\";
+@@\"focus.mode.sleep\" = \"Repos\";
 /* LampControl — Français */
 
 /* App */
