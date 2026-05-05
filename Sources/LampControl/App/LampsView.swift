@@ -21,10 +21,70 @@ struct LampsView: View {
         VStack(spacing: 8) {
             statusBar
 
+            // Search and filter controls (A5, A2)
+            if !appState.lamps.isEmpty && appState.canSync {
+                HStack(spacing: 10) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(muted)
+                        TextField("Search lamps...", text: $appState.searchText)
+                            .font(.system(size: 12, weight: .regular))
+                            .textFieldStyle(.plain)
+                        if !appState.searchText.isEmpty {
+                            Button { appState.searchText = "" } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(muted)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .liquidGlassSurface(radius: 8, tint: .clear)
+
+                    // Toggle offline lamps
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            appState.hideOfflineLamps.toggle()
+                        }
+                    } label: {
+                        Image(systemName: appState.hideOfflineLamps ? "eye.slash.fill" : "eye.fill")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(appState.hideOfflineLamps ? accent : muted)
+                            .frame(width: 32, height: 32)
+                    }
+                    .liquidGlassButtonStyle()
+                    .help(appState.hideOfflineLamps ? "Show all lamps" : "Hide offline lamps")
+                }
+                .padding(.horizontal, 2)
+            }
+
             if !appState.canSync {
                 onboardingCard
             } else if appState.lamps.isEmpty && !appState.isAutoSyncing {
                 emptyStateCard
+            } else if appState.visibleLamps.isEmpty && !appState.lamps.isEmpty {
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(muted)
+                        .frame(width: 28, height: 28)
+                        .liquidGlassCircle()
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("No lamps found")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(ink)
+                        Text(appState.hideOfflineLamps ? "All lamps are offline" : "Try a different search")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(muted)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .liquidGlassSurface(radius: 16, tint: Color.blue.opacity(0.08))
             }
 
             if appState.lamps.contains(where: { $0.capabilities.colorCode != nil }) {
@@ -39,6 +99,21 @@ struct LampsView: View {
             LazyVStack(spacing: 8) {
                 ForEach(appState.visibleLamps) { lamp in
                     LampRow(lamp: lamp)
+                }
+                .onMove { source, destination in
+                    // Initialize lampOrderIds if empty
+                    if appState.lampOrderIds.isEmpty {
+                        appState.lampOrderIds = appState.lamps.map { $0.id }
+                    }
+                    
+                    // Move items in the lampOrderIds array
+                    var updatedOrder = appState.lampOrderIds
+                    updatedOrder.move(fromOffsets: source, toOffset: destination)
+                    appState.lampOrderIds = updatedOrder
+                    
+                    // Persist to disk
+                    let store = SettingsStore()
+                    store.saveLampOrder(updatedOrder)
                 }
             }
         }
@@ -583,6 +658,7 @@ private struct GroupControlPanel: View {
 private struct LampRow: View {
     @EnvironmentObject private var appState: AppState
     let lamp: LampDevice
+    @State private var showingFeedback = false
 
     private let ink = LCTheme.ink
     private let muted = LCTheme.muted
@@ -592,9 +668,33 @@ private struct LampRow: View {
         VStack(spacing: showsAdvancedControls ? 10 : 0) {
             HStack(spacing: 8) {
                 Button {
-                    Task { await appState.toggle(lamp) }
+                    Task {
+                        await appState.toggle(lamp)
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showingFeedback = true
+                        }
+                        try? await Task.sleep(nanoseconds: 600_000_000)
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showingFeedback = false
+                        }
+                    }
                 } label: {
-                    rowSummary
+                    ZStack {
+                        rowSummary
+                        if showingFeedback {
+                            VStack(spacing: 9) {
+                                Spacer()
+                                HStack(spacing: 9) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundStyle(Color.green)
+                                    Spacer()
+                                }
+                                Spacer()
+                            }
+                            .padding(.horizontal, 9)
+                        }
+                    }
                 }
                 .buttonStyle(.plain)
                 .disabled(!lamp.online)
@@ -865,10 +965,21 @@ private struct LampRow: View {
     }
 
     private func temperatureLabel(for capability: NumericCapability) -> String {
-        let pct = temperaturePercentage(for: capability)
-        if pct < 30 { return L10n.tempWarm }
-        if pct > 70 { return L10n.tempCold }
-        return "\(pct)%"
+        let kelvin = temperatureKelvin(for: capability)
+        return "\(kelvin)K"
+    }
+
+    private func temperatureKelvin(for capability: NumericCapability) -> Int {
+        // Map capability range to Kelvin range (typically 2700K to 6500K)
+        // Most devices report temperature as a value in their capability range
+        // We'll map min -> 2700K, max -> 6500K as a reasonable default
+        let tempValue = temperatureValue(for: capability)
+        let minValue = capability.min
+        let maxValue = capability.max
+        let range = max(1, maxValue - minValue)
+        let normalized = Double(tempValue - minValue) / Double(range)
+        let kelvin = Int(round(2700.0 + normalized * (6500.0 - 2700.0)))
+        return kelvin
     }
 
     private var currentColorValue: Int {

@@ -38,12 +38,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
     private func configureStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(systemSymbolName: "lightbulb", accessibilityDescription: "LampControl")
+        updateStatusItemIcon(for: item)
         item.button?.imagePosition = .imageOnly
         item.button?.target = self
         item.button?.action = #selector(statusItemClicked)
         item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
         statusItem = item
+        
+        // Update icon when app state changes (A4: Dynamic icon)
+        appState.objectWillChange
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                if let item = self?.statusItem {
+                    self?.updateStatusItemIcon(for: item)
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func updateStatusItemIcon(for item: NSStatusItem) {
+        let hasActiveLamp = appState.lamps.contains { $0.power && $0.online }
+        let isCircadianActive = appState.circadianSettings.isEnabled
+        
+        let symbolName = hasActiveLamp ? "lightbulb.fill" : "lightbulb"
+        item.button?.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "LampControl")
+        
+        // Tint color based on state
+        if hasActiveLamp {
+            item.button?.contentTintColor = NSColor(red: 0.96, green: 0.67, blue: 0.16, alpha: 1.0)
+        } else if isCircadianActive {
+            item.button?.contentTintColor = NSColor(red: 0.96, green: 0.77, blue: 0.26, alpha: 1.0)
+        } else {
+            item.button?.contentTintColor = nil
+        }
     }
 
     @objc private func statusItemClicked() {

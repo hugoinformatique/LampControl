@@ -1139,6 +1139,19 @@ struct SettingsView: View {
                 infoRow("devices.sync",     value: syncSummary, icon: "arrow.triangle.2.circlepath")
             }
 
+            settingsGroup {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("devices.display.options")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(ink)
+                    
+                    Toggle("devices.hide.offline", isOn: $appState.hideOfflineLamps)
+                        .font(.system(size: 12, weight: .semibold))
+                        .toggleStyle(.switch)
+                        .tint(accent)
+                }
+            }
+
             Button {
                 Task { await appState.syncLamps() }
             } label: {

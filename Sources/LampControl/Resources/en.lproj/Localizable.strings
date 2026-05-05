@@ -251,6 +251,8 @@
 "devices.sync.now" = "Sync now";
 "devices.sync.hint" = "The lamp list also updates automatically every minute.";
 "devices.sync.required.hint" = "Set up Tuya account before syncing.";
+"devices.display.options" = "Display Options";
+"devices.hide.offline" = "Hide offline lamps";
 
 /* Updates */
 "updates.title" = "Updates";

@@ -28,6 +28,9 @@ final class AppState: ObservableObject {
     @Published var isOnboardingPresented = false
     @Published var userScenes: [UserLightScene] = []
     @Published var licenseState = LicenseState.earlyAccess
+    @Published var hideOfflineLamps = false
+    @Published var lampOrderIds: [String] = []
+    @Published var searchText = ""
 
     @Published var updateService = UpdateService()
 
@@ -54,6 +57,7 @@ final class AppState: ObservableObject {
     init() {
         loadLicense()
         loadScenes()
+        lampOrderIds = settingsStore.loadLampOrder()
         Task {
             await loadSettings()
             loadHueSettings()
@@ -86,11 +90,33 @@ final class AppState: ObservableObject {
     }
 
     var visibleLamps: [LampDevice] {
-        guard let maxLamps = licenseState.entitlements.maxLamps else {
-            return lamps
+        var filtered = lamps
+
+        // Apply license limit
+        if let maxLamps = licenseState.entitlements.maxLamps {
+            filtered = Array(filtered.prefix(maxLamps))
         }
 
-        return Array(lamps.prefix(maxLamps))
+        // Filter offline lamps if toggle is on
+        if hideOfflineLamps {
+            filtered = filtered.filter { $0.online }
+        }
+
+        // Apply search filter
+        if !searchText.isEmpty {
+            filtered = filtered.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        }
+
+        // Apply custom ordering
+        if !lampOrderIds.isEmpty {
+            filtered.sort { a, b in
+                let aIndex = lampOrderIds.firstIndex(of: a.id) ?? Int.max
+                let bIndex = lampOrderIds.firstIndex(of: b.id) ?? Int.max
+                return aIndex < bIndex
+            }
+        }
+
+        return filtered
     }
 
     var hiddenLampCount: Int {

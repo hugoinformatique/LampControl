@@ -26,6 +26,37 @@ final class SettingsStore {
         try keychain.readSecret()
     }
 
+    func saveLampOrder(_ order: [String]) {
+        let orderDict = ["lampOrder": order]
+        if let data = try? JSONEncoder().encode(orderDict) {
+            try? data.write(to: lampOrderURL, options: .atomic)
+        }
+    }
+
+    func loadLampOrder() -> [String] {
+        guard FileManager.default.fileExists(atPath: lampOrderURL.path) else {
+            return []
+        }
+        let data = try? Data(contentsOf: lampOrderURL)
+        if let data,
+           let dict = try? JSONDecoder().decode([String: [String]].self, from: data),
+           let order = dict["lampOrder"] {
+            return order
+        }
+        return []
+    }
+
+    private var lampOrderURL: URL {
+        let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("LampControl", isDirectory: true)
+
+        if !FileManager.default.fileExists(atPath: directory.path) {
+            try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        }
+
+        return directory.appendingPathComponent("lampOrder.json")
+    }
+
     private func readStoredSettings() throws -> StoredSettings {
         guard FileManager.default.fileExists(atPath: settingsURL.path) else {
             return StoredSettings(settings: TuyaSettings())

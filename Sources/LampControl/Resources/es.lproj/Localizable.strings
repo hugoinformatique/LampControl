@@ -251,6 +251,8 @@
 "devices.sync.now" = "Sincronizar ahora";
 "devices.sync.hint" = "La lista de lámparas también se actualiza automáticamente cada minuto.";
 "devices.sync.required.hint" = "Configura la cuenta Tuya antes de sincronizar.";
+"devices.display.options" = "Opciones de visualización";
+"devices.hide.offline" = "Ocultar lámparas sin conexión";
 
 /* Actualizaciones */
 "updates.title" = "Actualizaciones";
