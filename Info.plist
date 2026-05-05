@@ -32,20 +32,12 @@
   <true/>
   <key>NSHumanReadableCopyright</key>
   <string>Copyright © 2026 Hugo Informatique. Released under the MIT License.</string>
-  <key>LCLicenseCheckoutURL</key>
-  <string>https://lampcontrol.lemonsqueezy.com/checkout/buy/12d32ac2-9a5a-4120-a95e-36a10afb51d9</string>
-  <key>LCLicenseExpectedStoreID</key>
-  <integer>356642</integer>
-  <key>LCLicenseExpectedProductID</key>
-  <integer>1005308</integer>
-  <key>LCLicenseExpectedVariantID</key>
-  <integer>1577348</integer>
   <key>CFBundleIconFile</key>
   <string>AppIcon</string>
   <key>SUFeedURL</key>
-  <string>https://hugoinformatique.github.io/LampControl/appcast.xml</string>
+  <string>https://api.github.com/repos/hugo-informatique/lampcontrol/releases/latest</string>
   <key>SUPublicEDKey</key>
-  <string>REPLACE_WITH_GENERATED_ED25519_PUBLIC_KEY</string>
+  <string>YOUR_PUBLIC_KEY_HERE</string>
   <key>SUEnableAutomaticChecks</key>
   <true/>
   <key>SUScheduledCheckInterval</key>

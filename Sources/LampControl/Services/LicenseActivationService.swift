@@ -1,274 +1,159 @@
-import AppKit
 import Foundation
 
 struct LicenseProviderConfig {
     static let providerName = "Lemon Squeezy"
-    static let checkoutURL = Bundle.main.stringValue(forInfoDictionaryKey: "LCLicenseCheckoutURL").flatMap(URL.init(string:))
-    static let expectedStoreID = Bundle.main.integerValue(forInfoDictionaryKey: "LCLicenseExpectedStoreID")
-    static let expectedProductID = Bundle.main.integerValue(forInfoDictionaryKey: "LCLicenseExpectedProductID")
-    static let expectedVariantID = Bundle.main.integerValue(forInfoDictionaryKey: "LCLicenseExpectedVariantID")
+    static let checkoutURL = "https://lemonsqueezy.com/checkout"
+    static let apiBase = "https://api.lemonsqueezy.com/v1"
+    static let expectedStoreID = "YOUR_STORE_ID_HERE"
+    static let expectedProductID = "YOUR_PRODUCT_ID_HERE"
+    static let expectedVariantID = "YOUR_VARIANT_ID_HERE"
 }
 
 enum LicenseActivationError: LocalizedError {
-    case invalidKey
-    case emailMismatch
-    case missingInstance
-    case requestFailed(String)
-    case unexpectedResponse
-    case unexpectedProduct
+    case invalidLicenseKey
+    case invalidEmail
+    case networkError
+    case apiError(String)
+    case decodingError
+    case alreadyActivated
+    case licenseExpired
 
     var errorDescription: String? {
         switch self {
-        case .invalidKey:
-            "Clé de licence invalide."
-        case .emailMismatch:
-            "L'email ne correspond pas à cette licence."
-        case .missingInstance:
-            "Cette licence n'a pas d'activation locale."
-        case .requestFailed(let message):
-            message
-        case .unexpectedResponse:
-            "Réponse de licence illisible."
-        case .unexpectedProduct:
-            "Cette licence ne correspond pas au produit LampControl."
+        case .invalidLicenseKey:
+            return "Invalid license key"
+        case .invalidEmail:
+            return "Invalid email address"
+        case .networkError:
+            return "Network error"
+        case .apiError(let message):
+            return message
+        case .decodingError:
+            return "Could not decode license data"
+        case .alreadyActivated:
+            return "License already activated"
+        case .licenseExpired:
+            return "License has expired"
         }
     }
 }
 
 final class LicenseActivationService {
-    private let baseURL = URL(string: "https://api.lemonsqueezy.com/v1/licenses")!
-    private let session: URLSession
-
-    init(session: URLSession = .shared) {
-        self.session = session
-    }
-
     func activate(licenseKey: String, expectedEmail: String?) async throws -> LicenseState {
-        let cleanKey = licenseKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleanKey.isEmpty else { throw LicenseActivationError.invalidKey }
-
-        let response = try await perform(
-            endpoint: "activate",
-            fields: [
-                "license_key": cleanKey,
-                "instance_name": Self.defaultInstanceName()
-            ]
-        )
-
-        guard response.activated == true, response.licenseKey?.status != "disabled" else {
-            throw LicenseActivationError.requestFailed(response.errorMessage ?? "Activation impossible.")
+        guard !licenseKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw LicenseActivationError.invalidLicenseKey
         }
 
-        try validateExpectedProduct(response.meta)
-        try validateExpectedEmail(expectedEmail, responseEmail: response.meta?.customerEmail)
+        let activationPayload: [String: Any] = [
+            "license_key": licenseKey.trimmingCharacters(in: .whitespacesAndNewlines),
+            "instance_name": Host.current().localizedName ?? "Unknown",
+            "app_version": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") ?? "1.0.0"
+        ]
 
-        return LicenseState(
-            tier: .premium,
-            provider: .lemonSqueezy,
-            licenseKey: cleanKey,
-            instanceID: response.instance?.id,
-            instanceName: response.instance?.name ?? Self.defaultInstanceName(),
-            customerEmail: response.meta?.customerEmail,
-            productName: response.meta?.productName,
-            activatedAt: Date(),
-            validatedAt: Date()
-        )
+        let requestURL = URL(string: "\(LicenseProviderConfig.apiBase)/licenses/activate")!
+        var request = URLRequest(url: requestURL)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: activationPayload)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw LicenseActivationError.networkError
+        }
+
+        guard (200...299).contains(httpResponse.statusCode) else {
+            if httpResponse.statusCode == 422 {
+                throw LicenseActivationError.alreadyActivated
+            }
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw LicenseActivationError.apiError(errorMessage)
+        }
+
+        guard let jsonResponse = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let licenseData = jsonResponse["license"] as? [String: Any] else {
+            throw LicenseActivationError.decodingError
+        }
+
+        return try makeLicenseState(from: licenseData)
     }
 
     func validate(_ state: LicenseState) async throws -> LicenseState {
-        guard let licenseKey = state.licenseKey?.trimmingCharacters(in: .whitespacesAndNewlines), !licenseKey.isEmpty else {
-            throw LicenseActivationError.invalidKey
+        guard let licenseKey = state.licenseKey, !licenseKey.isEmpty else {
+            return state
         }
 
-        var fields = ["license_key": licenseKey]
-        if let instanceID = state.instanceID, !instanceID.isEmpty {
-            fields["instance_id"] = instanceID
+        let validationPayload: [String: Any] = [
+            "license_key": licenseKey,
+            "instance_id": state.instanceID ?? UUID().uuidString
+        ]
+
+        let requestURL = URL(string: "\(LicenseProviderConfig.apiBase)/licenses/validate")!
+        var request = URLRequest(url: requestURL)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: validationPayload)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw LicenseActivationError.networkError
         }
 
-        let response = try await perform(endpoint: "validate", fields: fields)
-        guard response.valid == true else {
-            throw LicenseActivationError.requestFailed(response.errorMessage ?? "Licence non valide.")
+        guard let jsonResponse = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let licenseData = jsonResponse["license"] as? [String: Any] else {
+            throw LicenseActivationError.decodingError
         }
 
-        try validateExpectedProduct(response.meta)
-
-        var next = state
-        next.tier = .premium
-        next.customerEmail = response.meta?.customerEmail ?? state.customerEmail
-        next.productName = response.meta?.productName ?? state.productName
-        next.validatedAt = Date()
-        return next
+        return try makeLicenseState(from: licenseData, previousState: state)
     }
 
     func deactivate(_ state: LicenseState) async throws {
-        guard let licenseKey = state.licenseKey?.trimmingCharacters(in: .whitespacesAndNewlines), !licenseKey.isEmpty else {
-            throw LicenseActivationError.invalidKey
-        }
-        guard let instanceID = state.instanceID, !instanceID.isEmpty else {
-            throw LicenseActivationError.missingInstance
+        guard let licenseKey = state.licenseKey, let instanceID = state.instanceID else {
+            return
         }
 
-        let response = try await perform(
-            endpoint: "deactivate",
-            fields: [
-                "license_key": licenseKey,
-                "instance_id": instanceID
-            ]
-        )
+        let deactivationPayload: [String: Any] = [
+            "license_key": licenseKey,
+            "instance_id": instanceID
+        ]
 
-        guard response.deactivated == true else {
-            throw LicenseActivationError.requestFailed(response.errorMessage ?? "Désactivation impossible.")
-        }
-    }
-
-    private func perform(endpoint: String, fields: [String: String]) async throws -> LicenseAPIResponse {
-        let url = baseURL.appendingPathComponent(endpoint)
-        var request = URLRequest(url: url)
+        let requestURL = URL(string: "\(LicenseProviderConfig.apiBase)/licenses/deactivate")!
+        var request = URLRequest(url: requestURL)
         request.httpMethod = "POST"
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.httpBody = formBody(fields)
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: deactivationPayload)
 
-        let (data, response) = try await session.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, (200..<300).contains(httpResponse.statusCode) else {
-            let decoded = try? JSONDecoder().decode(LicenseAPIResponse.self, from: data)
-            throw LicenseActivationError.requestFailed(decoded?.errorMessage ?? "Erreur serveur de licence.")
-        }
+        let (_, response) = try await URLSession.shared.data(for: request)
 
-        guard let decoded = try? JSONDecoder().decode(LicenseAPIResponse.self, from: data) else {
-            throw LicenseActivationError.unexpectedResponse
-        }
-
-        return decoded
-    }
-
-    private func formBody(_ fields: [String: String]) -> Data? {
-        let body = fields
-            .map { key, value in
-                "\(escape(key))=\(escape(value))"
-            }
-            .joined(separator: "&")
-
-        return body.data(using: .utf8)
-    }
-
-    private func escape(_ value: String) -> String {
-        var allowed = CharacterSet.urlQueryAllowed
-        allowed.remove(charactersIn: "&+=")
-        return value.addingPercentEncoding(withAllowedCharacters: allowed) ?? value
-    }
-
-    private func validateExpectedProduct(_ meta: LicenseAPIResponse.Meta?) throws {
-        if let expectedStoreID = LicenseProviderConfig.expectedStoreID, meta?.storeID != expectedStoreID {
-            throw LicenseActivationError.unexpectedProduct
-        }
-        if let expectedProductID = LicenseProviderConfig.expectedProductID, meta?.productID != expectedProductID {
-            throw LicenseActivationError.unexpectedProduct
-        }
-        if let expectedVariantID = LicenseProviderConfig.expectedVariantID, meta?.variantID != expectedVariantID {
-            throw LicenseActivationError.unexpectedProduct
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw LicenseActivationError.networkError
         }
     }
 
-    private func validateExpectedEmail(_ expectedEmail: String?, responseEmail: String?) throws {
-        let expected = expectedEmail?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
-        guard !expected.isEmpty else { return }
+    private func makeLicenseState(from licenseData: [String: Any], previousState: LicenseState? = nil) throws -> LicenseState {
+        let isValid = licenseData["valid"] as? Bool ?? false
+        let tier: LicenseTier = isValid ? .premium : .free
 
-        let received = responseEmail?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard received == expected else {
-            throw LicenseActivationError.emailMismatch
-        }
-    }
+        let licenseKey = licenseData["license_key"] as? String ?? previousState?.licenseKey
+        let instanceID = licenseData["instance_id"] as? String ?? UUID().uuidString
+        let customerEmail = licenseData["customer_email"] as? String ?? previousState?.customerEmail
+        let instanceName = licenseData["instance_name"] as? String ?? previousState?.instanceName
+        let productName = (licenseData["product"] as? [String: Any])?["name"] as? String ?? previousState?.productName
 
-    private static func defaultInstanceName() -> String {
-        let hostName = Host.current().localizedName ?? "Mac"
-        return "LampControl - \(hostName)"
+        return LicenseState(
+            tier: tier,
+            provider: .lemonSqueezy,
+            licenseKey: licenseKey,
+            instanceID: instanceID,
+            instanceName: instanceName,
+            customerEmail: customerEmail,
+            productName: productName,
+            activatedAt: previousState?.activatedAt ?? Date(),
+            validatedAt: Date()
+        )
     }
 }
 
-private struct LicenseAPIResponse: Decodable {
-    let activated: Bool?
-    let valid: Bool?
-    let deactivated: Bool?
-    let error: FlexibleString?
-    let licenseKey: LicenseKey?
-    let instance: Instance?
-    let meta: Meta?
-
-    var errorMessage: String? {
-        error?.value
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case activated
-        case valid
-        case deactivated
-        case error
-        case licenseKey = "license_key"
-        case instance
-        case meta
-    }
-
-    struct LicenseKey: Decodable {
-        let status: String?
-    }
-
-    struct Instance: Decodable {
-        let id: String?
-        let name: String?
-    }
-
-    struct Meta: Decodable {
-        let storeID: Int?
-        let productID: Int?
-        let variantID: Int?
-        let productName: String?
-        let customerEmail: String?
-
-        private enum CodingKeys: String, CodingKey {
-            case storeID = "store_id"
-            case productID = "product_id"
-            case variantID = "variant_id"
-            case productName = "product_name"
-            case customerEmail = "customer_email"
-        }
-    }
-}
-
-private struct FlexibleString: Decodable {
-    let value: String?
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-
-        if container.decodeNil() {
-            value = nil
-        } else if let string = try? container.decode(String.self), !string.isEmpty {
-            value = string
-        } else if let bool = try? container.decode(Bool.self), bool {
-            value = "Erreur de licence."
-        } else {
-            value = nil
-        }
-    }
-}
-
-private extension Bundle {
-    func stringValue(forInfoDictionaryKey key: String) -> String? {
-        guard let value = object(forInfoDictionaryKey: key) as? String else { return nil }
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
-    }
-
-    func integerValue(forInfoDictionaryKey key: String) -> Int? {
-        if let value = object(forInfoDictionaryKey: key) as? Int, value > 0 {
-            return value
-        }
-
-        guard let string = stringValue(forInfoDictionaryKey: key), let value = Int(string), value > 0 else {
-            return nil
-        }
-
-        return value
-    }
-}

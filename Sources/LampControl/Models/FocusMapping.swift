@@ -1,12 +1,12 @@
 import Foundation
 
-@@/// Represents an available macOS Focus mode
-@@struct FocusMode: Identifiable, Hashable {
-@@    var identifier: String      // e.g., "do-not-disturb", "focus", "sleep"
-@@    var displayName: String     // e.g., "Ne pas déranger", "Focus", "Repos"
-@@    var id: String { identifier }
-@@}
-@@
+/// Represents an available macOS Focus mode
+struct FocusMode: Identifiable, Hashable {
+    var identifier: String
+    var displayName: String
+    var id: String { identifier }
+}
+
 /// Maps a macOS Focus mode to a lamp scene
 struct FocusMapping: Codable, Identifiable, Equatable {
     var id: String = UUID().uuidString

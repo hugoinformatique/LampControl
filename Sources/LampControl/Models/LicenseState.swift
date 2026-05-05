@@ -17,10 +17,21 @@ enum LicenseTier: String, Codable {
 enum LicenseProvider: String, Codable {
     case lemonSqueezy
 
-    var title: String {
-        switch self {
-        case .lemonSqueezy: return "Lemon Squeezy"
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = (try? container.decode(String.self))?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        switch raw {
+        case "lemonsqueezy", "lemon_squeezy", "lemon squeezy":
+            self = .lemonSqueezy
+        case .none:
+            self = .lemonSqueezy
+        default:
+            self = .lemonSqueezy
         }
+    }
+
+    var title: String {
+        "Lemon Squeezy"
     }
 }
 

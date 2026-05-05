@@ -17,9 +17,7 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "LampControl",
-            dependencies: [
-                .product(name: "Sparkle", package: "Sparkle")
-            ],
+            dependencies: ["Sparkle"],
             path: "Sources/LampControl",
             resources: [
                 .process("Resources")

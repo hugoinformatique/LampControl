@@ -3,8 +3,9 @@ import SwiftUI
 struct PremiumSettingsView: View {
     @EnvironmentObject private var appState: AppState
     let licenseState: LicenseState
-    @State private var licenseKey = ""
-    @State private var email = ""
+    @State private var licenseKey: String = ""
+    @State private var customerEmail: String = ""
+    @State private var showingActivationForm = false
 
     var body: some View {
         VStack(spacing: 12) {
@@ -23,10 +24,6 @@ struct PremiumSettingsView: View {
             activationCard
 
             earlyAccessNote
-        }
-        .onAppear {
-            licenseKey = licenseState.licenseKey ?? ""
-            email = licenseState.customerEmail ?? ""
         }
     }
 
@@ -47,13 +44,19 @@ struct PremiumSettingsView: View {
             }
 
             Spacer()
+
+            if licenseState.tier == .premium {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color.green)
+            }
         }
     }
 
     private var activationCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("premium.activation")
+                Text("premium.license")
                     .font(.system(size: 13, weight: .semibold))
 
                 Spacer()
@@ -63,42 +66,38 @@ struct PremiumSettingsView: View {
                     .foregroundStyle(LCTheme.muted)
             }
 
-            VStack(alignment: .leading, spacing: 7) {
-                TextField("premium.license.key", text: $licenseKey)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 12, weight: .medium, design: .monospaced))
-                    .padding(.horizontal, 11)
-                    .padding(.vertical, 9)
-                    .liquidGlassSurface(radius: 12, tint: Color.white.opacity(0.06))
+            if licenseState.tier == .premium {
+                VStack(alignment: .leading, spacing: 7) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(Color.green)
 
-                TextField("premium.email", text: $email)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 12, weight: .medium))
-                    .padding(.horizontal, 11)
-                    .padding(.vertical, 9)
-                    .liquidGlassSurface(radius: 12, tint: Color.white.opacity(0.06))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("premium.active")
+                                .font(.system(size: 12, weight: .semibold))
 
-                if let instanceName = licenseState.instanceName {
-                    Text(instanceName)
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(LCTheme.muted)
-                        .lineLimit(1)
+                            if let instanceName = licenseState.instanceName {
+                                Text(instanceName)
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundStyle(LCTheme.muted)
+                            } else {
+                                Text(licenseState.maskedLicenseKey)
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundStyle(LCTheme.muted)
+                            }
+                        }
+
+                        Spacer()
+                    }
+
+                    if let instanceName = licenseState.instanceName {
+                        Text("Instance: \(instanceName)")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(LCTheme.muted)
+                    }
                 }
-            }
 
-            HStack(spacing: 8) {
-                Button {
-                    Task { await appState.activateLicense(licenseKey, email: email) }
-                } label: {
-                    Label(licenseState.tier == .premium ? "premium.reactivate" : "premium.activate",
-                          systemImage: "checkmark.seal.fill")
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 9)
-                }
-                .disabled(appState.isBusy || licenseKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .liquidGlassButtonStyle(prominent: true)
-
-                if licenseState.tier == .premium {
+                HStack(spacing: 8) {
                     Button {
                         Task { await appState.validateLicense() }
                     } label: {
@@ -111,29 +110,59 @@ struct PremiumSettingsView: View {
                     Button {
                         Task { await appState.deactivateLicense() }
                     } label: {
-                        Image(systemName: "xmark")
+                        Image(systemName: "xmark.circle.fill")
+                            .frame(width: 36, height: 36)
+                    }
+                    .disabled(appState.isBusy)
+                    .liquidGlassButtonStyle()
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("premium.license.hint")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(LCTheme.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    TextField("premium.license.key", text: $licenseKey)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(size: 11, weight: .medium))
+                        .monospacedDigit()
+
+                    TextField("premium.license.email", text: $customerEmail)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(size: 11, weight: .medium))
+                }
+
+                HStack(spacing: 8) {
+                    Button {
+                        Task { await appState.activateLicense(licenseKey, email: customerEmail) }
+                        licenseKey = ""
+                        customerEmail = ""
+                    } label: {
+                        Label("premium.activate", systemImage: "checkmark")
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 9)
+                    }
+                    .disabled(appState.isBusy || licenseKey.isEmpty)
+                    .liquidGlassButtonStyle(prominent: true)
+
+                    Button {
+                        Task { await appState.validateLicense() }
+                    } label: {
+                        Image(systemName: "arrow.triangle.2.circlepath")
                             .frame(width: 36, height: 36)
                     }
                     .disabled(appState.isBusy)
                     .liquidGlassButtonStyle()
                 }
             }
-
-            Button {
-                appState.openPremiumCheckout()
-            } label: {
-                Label("premium.buy", systemImage: "cart.fill")
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 9)
-            }
-            .liquidGlassButtonStyle()
         }
         .padding(14)
         .liquidGlassSurface(radius: 22)
     }
 
     private var earlyAccessNote: some View {
-        Text("premium.early.access.note")
+        Text("premium.early.access.hint")
             .font(.system(size: 11, weight: .medium))
             .foregroundStyle(LCTheme.muted)
             .frame(maxWidth: .infinity, alignment: .leading)

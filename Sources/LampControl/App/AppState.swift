@@ -34,17 +34,18 @@ final class AppState: ObservableObject {
     @Published var rooms: [Room] = []
     @Published var focusMappings: [FocusMapping] = []
     @Published var currentFocusIdentifier: String?
-@@    @Published var availableFocusModes: [FocusMode] = [
-@@        FocusMode(identifier: "do-not-disturb", displayName: NSLocalizedString("focus.mode.donotdisturb", comment: "")),
-@@        FocusMode(identifier: "focus", displayName: NSLocalizedString("focus.mode.focus", comment: "")),
-@@        FocusMode(identifier: "sleep", displayName: NSLocalizedString("focus.mode.sleep", comment: ""))
-@@    ]
+    @Published var availableFocusModes: [FocusMode] = [
+        FocusMode(identifier: "do-not-disturb", displayName: NSLocalizedString("focus.mode.donotdisturb", comment: "")),
+        FocusMode(identifier: "focus", displayName: NSLocalizedString("focus.mode.focus", comment: "")),
+        FocusMode(identifier: "sleep", displayName: NSLocalizedString("focus.mode.sleep", comment: ""))
+    ]
 
     @Published var updateService = UpdateService()
 
     private let settingsStore = SettingsStore()
     private let roomStore = RoomStore()
     private let focusMappingStore = FocusMappingStore()
+    private let widgetSnapshotStore = WidgetSnapshotStore()
     private let hueSettingsStore = HueSettingsStore()
     private let lifxSettingsStore = LifxSettingsStore()
     private let goveeSettingsStore = GoveeSettingsStore()
@@ -251,18 +252,8 @@ final class AppState: ObservableObject {
     }
 
     private func updateCurrentFocus() {
-        // Use NSWorkspace to get the currently focused application or monitor system focus state
-        // For now, we detect if an app with "Focus" in its info is active
-        // A more robust solution would require system monitoring or notification subscriptions
-        let workspace = NSWorkspace.shared
-        
-        // Try to detect Focus mode via system notifications or NSWorkspace
-        // This is a simplified approach; macOS Focus detection requires more sophisticated monitoring
-        if let frontApp = workspace.frontmostApplication {
-            // We could check the app's metadata, but Focus mode detection is typically done via
-            // system notifications or framework-specific APIs
-            // For a production app, consider using WidgetKit or FocusStatus framework on macOS 13+
-        }
+        // Placeholder until we wire the real macOS Focus API.
+        currentFocusIdentifier = nil
     }
 
     deinit {
@@ -470,6 +461,7 @@ final class AppState: ObservableObject {
                 selectedLampIds = selectedLampIds.intersection(Set(synced.map(\.id)))
                 expandedLampIds = expandedLampIds.intersection(Set(synced.map(\.id)))
                 lastSyncDate = Date()
+                persistWidgetSnapshot()
             } catch {
                 // Silent refresh should not interrupt normal use.
             }
@@ -484,6 +476,7 @@ final class AppState: ObservableObject {
             expandedLampIds = expandedLampIds.intersection(Set(synced.map(\.id)))
             lastSyncDate = Date()
             message = synced.isEmpty ? "Aucune lampe compatible trouvée." : "\(synced.count) lampe(s) synchronisée(s)."
+            persistWidgetSnapshot()
         }
     }
 
@@ -759,6 +752,7 @@ final class AppState: ObservableObject {
 
         userScenes.removeAll { $0.id == scene.id }
         persistScenes()
+        persistWidgetSnapshot()
         message = "Scène supprimée."
     }
 
@@ -819,7 +813,7 @@ final class AppState: ObservableObject {
             let next = try await licenseActivationService.activate(licenseKey: licenseKey, expectedEmail: email)
             licenseState = next
             try licenseStore.save(next)
-            message = "Licence Premium activée."
+            message = "Achat Premium pris en compte."
         }
     }
 
@@ -828,7 +822,7 @@ final class AppState: ObservableObject {
             let next = try await licenseActivationService.validate(licenseState)
             licenseState = next
             try licenseStore.save(next)
-            message = "Licence Premium validée."
+            message = next.tier == .premium ? "Premium activé." : "Achat Premium non détecté."
         }
     }
 
@@ -840,17 +834,12 @@ final class AppState: ObservableObject {
 
             licenseState = .earlyAccess
             try licenseStore.save(licenseState)
-            message = "Licence désactivée. Early Access actif."
+            message = "État local réinitialisé."
         }
     }
 
     func openPremiumCheckout() {
-        guard let url = LicenseProviderConfig.checkoutURL else {
-            message = "Lien d'achat Premium à configurer."
-            return
-        }
-
-        NSWorkspace.shared.open(url)
+        Task { await activateLicense("", email: nil) }
     }
 
     func discoverHueBridges() async {
@@ -1314,6 +1303,7 @@ final class AppState: ObservableObject {
 
     private func updateLamp(_ next: LampDevice) {
         lamps = lamps.map { $0.id == next.id ? next : $0 }
+        persistWidgetSnapshot()
     }
 
     private func startAutoSync() {
@@ -1336,6 +1326,20 @@ final class AppState: ObservableObject {
         } catch {
             message = error.localizedDescription
         }
+    }
+
+    private func persistWidgetSnapshot() {
+        let snapshot = WidgetDashboardSnapshot(
+            totalLampCount: lamps.count,
+            onlineLampCount: lamps.filter(\.online).count,
+            poweredOnLampCount: lamps.filter(\.power).count,
+            sceneCount: userScenes.count,
+            sceneTitles: userScenes.map(\.title),
+            activeRoomCount: rooms.count,
+            roomTitles: rooms.map(\.name)
+        )
+
+        try? widgetSnapshotStore.save(snapshot)
     }
 }
 

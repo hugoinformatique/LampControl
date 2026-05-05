@@ -122,7 +122,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
         NotificationCenter.default.addObserver(forName: .shortcutSettingsDidChange, object: nil, queue: .main) { [weak self] _ in
             guard let self else { return }
-            self.globalShortcutService.start(with: self.appState.shortcutSettings.bindings)
+            Task { @MainActor in
+                self.globalShortcutService.start(with: self.appState.shortcutSettings.bindings)
+            }
         }
     }
 

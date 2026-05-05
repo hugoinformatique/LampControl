@@ -1,8 +1,3 @@
-@@
-@@/* Noms des modes Focus */
-@@\"focus.mode.donotdisturb\" = \"Ne pas déranger\";
-@@\"focus.mode.focus\" = \"Focus\";
-@@\"focus.mode.sleep\" = \"Repos\";
 /* LampControl — Français */
 
 /* App */
@@ -115,7 +110,7 @@
 "route.circadian.sub.disabled" = "Désactivé";
 "route.circadian.sub.active" = "Actif — %d points de contrôle";
 "route.devices.subtitle" = "%d lampe(s) synchronisée(s)";
-"route.updates.subtitle" = "Sparkle auto-update";
+"route.updates.subtitle" = "Mises à jour App Store";
 "route.about.subtitle" = "Version et informations locales";
 
 /* Fournisseurs */
@@ -295,12 +290,15 @@
 "premium.custom.scenes" = "Scènes personnalisées";
 "premium.quick.ambiances" = "Ambiances rapides";
 "premium.activation" = "Activation";
+"premium.purchase" = "Achat";
+"premium.app.store.hint" = "Le Premium est acheté via l’App Store et restauré depuis votre compte Apple.";
+"premium.app.store.note" = "Le Premium est désormais géré par Apple. Utilisez le bouton d’achat pour ouvrir le flux App Store, puis restaurez les achats si besoin.";
 "premium.license.key" = "Clé de licence";
 "premium.email" = "Email d'achat";
 "premium.activate" = "Activer";
 "premium.reactivate" = "Réactiver";
 "premium.buy" = "Acheter Premium";
-"premium.early.access.note" = "Pendant l'Early Access, les fonctionnalités Premium restent actives. La validation Lemon Squeezy est prête, sans secret API dans l'app.";
+"premium.early.access.note" = "Pendant l'Early Access, les fonctionnalités Premium restent actives.";
 "premium.active" = "Actif";
 "premium.locked" = "Premium";
 
