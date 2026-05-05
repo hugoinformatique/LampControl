@@ -338,3 +338,16 @@
 "menu.check.updates" = "Buscar actualizaciones\u{2026}";
 "menu.about" = "Acerca de LampControl v%@";
 "menu.quit" = "Salir";
+
+/* Habitaciones */
+"devices.rooms.title" = "Gestión de habitaciones";
+"room.all.on" = "Encender todo";
+"room.all.off" = "Apagar todo";
+"room.add" = "Añadir habitación";
+"room.edit" = "Editar";
+"room.delete" = "Eliminar";
+"room.unassigned" = "Sin asignar";
+"room.manage" = "Gestionar habitaciones";
+"room.name.placeholder" = "Nombre de la habitación";
+"premium.rooms" = "Habitaciones";
+"room.premium.message" = "La gestión de habitaciones es una característica Premium";

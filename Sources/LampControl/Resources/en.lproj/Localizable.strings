@@ -338,3 +338,16 @@
 "menu.check.updates" = "Check for Updates\u{2026}";
 "menu.about" = "About LampControl v%@";
 "menu.quit" = "Quit";
+
+/* Rooms */
+"devices.rooms.title" = "Room Management";
+"room.all.on" = "All On";
+"room.all.off" = "All Off";
+"room.add" = "Add Room";
+"room.edit" = "Edit";
+"room.delete" = "Delete";
+"room.unassigned" = "Unassigned";
+"room.manage" = "Manage Rooms";
+"room.name.placeholder" = "Room name";
+"premium.rooms" = "Rooms";
+"room.premium.message" = "Room management is a Premium feature";

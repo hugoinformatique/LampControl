@@ -31,10 +31,12 @@ final class AppState: ObservableObject {
     @Published var hideOfflineLamps = false
     @Published var lampOrderIds: [String] = []
     @Published var searchText = ""
+    @Published var rooms: [Room] = []
 
     @Published var updateService = UpdateService()
 
     private let settingsStore = SettingsStore()
+    private let roomStore = RoomStore()
     private let hueSettingsStore = HueSettingsStore()
     private let lifxSettingsStore = LifxSettingsStore()
     private let goveeSettingsStore = GoveeSettingsStore()
@@ -70,7 +72,117 @@ final class AppState: ObservableObject {
             loadAutomations()
             loadCircadianSettings()
             await syncLamps(silent: true)
+            // Load rooms after initial sync and ensure default migration
+            await loadRoomsAndMigrateIfNeeded()
             startAutoSync()
+        }
+    }
+
+    func loadRoomsAndMigrateIfNeeded() async {
+        // Load persisted rooms
+        let loaded = roomStore.loadRooms()
+        if !loaded.isEmpty {
+            rooms = loaded
+            return
+        }
+
+        // Migration: create an 'Unassigned' room containing all known lamp ids
+        let allIds = lamps.map { $0.id }
+        let unassigned = Room(name: "Unassigned", lampIds: allIds)
+        rooms = [unassigned]
+        do {
+            try roomStore.saveRooms(rooms)
+        } catch {
+            message = "Impossible de sauvegarder les pièces."
+        }
+    }
+
+    func persistRooms() {
+        do {
+            try roomStore.saveRooms(rooms)
+        } catch {
+            message = "Impossible de sauvegarder les pièces."
+        }
+    }
+
+    func lamps(in roomId: String) -> [LampDevice] {
+        guard let room = rooms.first(where: { $0.id == roomId }) else { return [] }
+        return lamps.filter { room.lampIds.contains($0.id) }
+    }
+
+    func roomForLamp(_ lampId: String) -> Room? {
+        rooms.first { $0.lampIds.contains(lampId) }
+    }
+
+    func assignLamp(_ lampId: String, to roomId: String) {
+        // Remove from other rooms
+        for i in rooms.indices {
+            rooms[i].lampIds.removeAll { $0 == lampId }
+        }
+
+        if let idx = rooms.firstIndex(where: { $0.id == roomId }) {
+            if !rooms[idx].lampIds.contains(lampId) {
+                rooms[idx].lampIds.append(lampId)
+            }
+        }
+
+        persistRooms()
+    }
+
+        func unassignLamp(_ lampId: String) {
+            for i in rooms.indices {
+                rooms[i].lampIds.removeAll { $0 == lampId }
+            }
+            persistRooms()
+        }
+
+    func setPowerForRoom(_ roomId: String, value: Bool) async {
+        guard let room = rooms.first(where: { $0.id == roomId }) else { return }
+        let targets = lamps.filter { room.lampIds.contains($0.id) && $0.online }
+        guard !targets.isEmpty else { message = "Aucune lampe en ligne dans cette pièce."; return }
+
+        await runBusy {
+            var updated: [LampDevice] = []
+            for lamp in targets {
+                updated.append(try await makeLightProvider(for: lamp).setPower(deviceId: lamp.nativeID, value: value))
+            }
+            for lamp in updated { updateLamp(lamp) }
+            message = value ? "Pièce allumée." : "Pièce éteinte."
+        }
+    }
+
+    func applyScene(_ scene: UserLightScene, toRoomId roomId: String) async {
+        guard licenseState.entitlements.canUseCustomScenes else {
+            message = "Les scènes personnalisées sont incluses dans Premium."
+            return
+        }
+
+        guard let room = rooms.first(where: { $0.id == roomId }) else { return }
+        let targets = lamps.filter { room.lampIds.contains($0.id) && $0.online && $0.capabilities.colorCode != nil }
+        guard !targets.isEmpty else { message = "Aucune lampe RGB en ligne dans cette pièce."; return }
+
+        await runBusy {
+            var updated: [LampDevice] = []
+            if let snapshots = scene.snapshots {
+                for snap in snapshots {
+                    guard let lamp = targets.first(where: { $0.id == snap.lampId }) else { continue }
+                    let provider = try makeLightProvider(for: lamp)
+                    if let color = snap.color, lamp.capabilities.colorCode != nil {
+                        updated.append(try await provider.setColor(deviceId: lamp.nativeID, color: color))
+                    } else if let brightness = snap.brightness, lamp.capabilities.brightness != nil {
+                        updated.append(try await provider.setBrightness(deviceId: lamp.nativeID, value: brightness))
+                    } else if let temp = snap.temperature, lamp.capabilities.temperature != nil {
+                        updated.append(try await provider.setTemperature(deviceId: lamp.nativeID, value: temp))
+                    }
+                }
+            } else {
+                for lamp in targets {
+                    updated.append(try await makeLightProvider(for: lamp).setColor(deviceId: lamp.nativeID, color: scene.color))
+                }
+            }
+
+            for lamp in updated { updateLamp(lamp) }
+            message = "Scène \(scene.title) appliquée à la pièce."
         }
     }
 

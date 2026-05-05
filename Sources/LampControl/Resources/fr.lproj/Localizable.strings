@@ -338,3 +338,16 @@
 "menu.check.updates" = "Vérifier les mises à jour\u{2026}";
 "menu.about" = "À propos de LampControl v%@";
 "menu.quit" = "Quitter";
+
+/* Pièces */
+"devices.rooms.title" = "Gestion des pièces";
+"room.all.on" = "Tout allumer";
+"room.all.off" = "Tout éteindre";
+"room.add" = "Ajouter une pièce";
+"room.edit" = "Modifier";
+"room.delete" = "Supprimer";
+"room.unassigned" = "Non assignée";
+"room.manage" = "Gérer les pièces";
+"room.name.placeholder" = "Nom de la pièce";
+"premium.rooms" = "Pièces";
+"room.premium.message" = "La gestion des pièces est une fonctionnalité Premium";

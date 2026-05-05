@@ -46,6 +46,18 @@ enum L10n {
     static var lampsHideOfflineHelp: String { NSLocalizedString("lamps.hide.offline.help", comment: "") }
     static var lampsShowAllHelp: String     { NSLocalizedString("lamps.show.all.help", comment: "") }
 
+    // MARK: - Room strings
+
+    static var roomAllOn: String          { NSLocalizedString("room.all.on", comment: "") }
+    static var roomAllOff: String         { NSLocalizedString("room.all.off", comment: "") }
+    static var roomAdd: String            { NSLocalizedString("room.add", comment: "") }
+    static var roomEdit: String           { NSLocalizedString("room.edit", comment: "") }
+    static var roomDelete: String         { NSLocalizedString("room.delete", comment: "") }
+    static var roomUnassigned: String     { NSLocalizedString("room.unassigned", comment: "") }
+    static var roomManage: String         { NSLocalizedString("room.manage", comment: "") }
+    static var roomNamePlaceholder: String { NSLocalizedString("room.name.placeholder", comment: "") }
+    static var roomPremiumMessage: String { NSLocalizedString("room.premium.message", comment: "") }
+
     // MARK: - Lamp status (computed String properties)
 
     static var statusOffline: String { NSLocalizedString("lamp.status.offline", comment: "") }

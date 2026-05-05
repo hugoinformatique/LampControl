@@ -4,6 +4,7 @@ import AppKit
 struct LampsView: View {
     @EnvironmentObject private var appState: AppState
     @State private var draggedLampID: String?
+    @State private var expandedRoomIds: Set<String> = []
     private let ink = LCTheme.ink
     private let muted = LCTheme.muted
     private let accent = LCTheme.accent
@@ -98,19 +99,93 @@ struct LampsView: View {
             }
 
             LazyVStack(spacing: 8) {
-                ForEach(appState.visibleLamps) { lamp in
-                    LampRow(lamp: lamp)
-                        .opacity(draggedLampID == lamp.id ? 0.72 : 1)
-                        .onDrag {
-                            draggedLampID = lamp.id
-                            return NSItemProvider(object: lamp.id as NSString)
+                // Group lamps by room
+                let rooms = appState.rooms
+                
+
+                ForEach(rooms) { room in
+                    let roomLamps = appState.visibleLamps.filter { room.lampIds.contains($0.id) }
+                    if !roomLamps.isEmpty {
+                        VStack(spacing: 6) {
+                            HStack(spacing: 8) {
+                                Button {
+                                    if expandedRoomIds.contains(room.id) { expandedRoomIds.remove(room.id) } else { expandedRoomIds.insert(room.id) }
+                                } label: {
+                                    Image(systemName: expandedRoomIds.contains(room.id) ? "chevron.down" : "chevron.right")
+                                        .font(.system(size: 12, weight: .semibold))
+                                }
+                                .buttonStyle(.plain)
+
+                                Text(room.name)
+                                    .font(.system(size: 12, weight: .semibold))
+
+                                Spacer()
+
+                                Button(L10n.roomAllOn) {
+                                    Task { await appState.setPowerForRoom(room.id, value: true) }
+                                }
+                                .buttonStyle(.plain)
+
+                                Button(L10n.roomAllOff) {
+                                    Task { await appState.setPowerForRoom(room.id, value: false) }
+                                }
+                                .buttonStyle(.plain)
+
+                                Menu {
+                                    ForEach(appState.userScenes) { scene in
+                                        Button(scene.title) { Task { await appState.applyScene(scene, toRoomId: room.id) } }
+                                    }
+                                } label: {
+                                    Image(systemName: "paintpalette")
+                                }
+                                .menuStyle(BorderlessButtonMenuStyle())
+                            }
+                            .padding(.horizontal, 10)
+
+                            if expandedRoomIds.contains(room.id) {
+                                ForEach(roomLamps) { lamp in
+                                    LampRow(lamp: lamp)
+                                        .opacity(draggedLampID == lamp.id ? 0.72 : 1)
+                                        .onDrag {
+                                            draggedLampID = lamp.id
+                                            return NSItemProvider(object: lamp.id as NSString)
+                                        }
+                                        .onDrop(of: [.text], delegate: LampReorderDropDelegate(
+                                            targetLamp: lamp,
+                                            draggedLampID: $draggedLampID,
+                                            appState: appState,
+                                            canReorder: canReorderLamps
+                                        ))
+                                }
+                            }
                         }
-                        .onDrop(of: [.text], delegate: LampReorderDropDelegate(
-                            targetLamp: lamp,
-                            draggedLampID: $draggedLampID,
-                            appState: appState,
-                            canReorder: canReorderLamps
-                        ))
+                        .liquidGlassSurface(radius: 12, tint: Color.white.opacity(0.02))
+                        .padding(.horizontal, 8)
+                    }
+                }
+
+                // Unassigned lamps
+                let unassigned = appState.visibleLamps.filter { appState.roomForLamp($0.id) == nil }
+                if !unassigned.isEmpty {
+                    VStack(spacing: 6) {
+                        HStack(spacing: 8) {
+                            Text("Unassigned")
+                                .font(.system(size: 12, weight: .semibold))
+                            Spacer()
+                        }
+                        .padding(.horizontal, 10)
+
+                        ForEach(unassigned) { lamp in
+                            LampRow(lamp: lamp)
+                                .opacity(draggedLampID == lamp.id ? 0.72 : 1)
+                                .onDrag {
+                                    draggedLampID = lamp.id
+                                    return NSItemProvider(object: lamp.id as NSString)
+                                }
+                        }
+                    }
+                    .liquidGlassSurface(radius: 12, tint: Color.white.opacity(0.02))
+                    .padding(.horizontal, 8)
                 }
             }
         }

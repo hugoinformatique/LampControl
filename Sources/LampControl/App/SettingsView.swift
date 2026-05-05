@@ -12,6 +12,9 @@ struct SettingsView: View {
     @State private var newWizName: String = ""
     @State private var editingAutomation: Automation?
     @State private var isAddingAutomation = false
+    @State private var editingRoomId: String?
+    @State private var newRoomName: String = ""
+    @State private var isCreatingRoom = false
 
     private let ink = LCTheme.ink
     private let muted = LCTheme.muted
@@ -1167,6 +1170,195 @@ struct SettingsView: View {
             .opacity(appState.isBusy || !appState.canSync ? 0.55 : 1)
 
             hint(appState.canSync ? "devices.sync.hint" : "devices.sync.required.hint")
+
+            // Room management section
+            if !appState.licenseState.entitlements.canUseRooms {
+                settingsGroup {
+                    HStack(spacing: 12) {
+                        Image(systemName: "lock.fill")
+                            .foregroundStyle(Color.yellow)
+                            .frame(width: 24, height: 24)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("devices.rooms.title")
+                                .font(.system(size: 12, weight: .semibold))
+                            Text("room.premium.message")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(muted)
+                        }
+                        Spacer()
+                        Label("premium.locked", systemImage: "crown.fill")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Color.yellow)
+                    }
+                    .padding(10)
+                    .liquidGlassSurface(radius: 16)
+                }
+            } else {
+                settingsGroup {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Text("devices.rooms.title")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(ink)
+                            Spacer()
+                            Button {
+                                isCreatingRoom = true
+                                newRoomName = ""
+                            } label: {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(accent)
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        // List rooms with edit/delete
+                        ForEach(appState.rooms) { room in
+                            HStack(spacing: 8) {
+                                Image(systemName: "door.left.hand.open")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(accent)
+                                    .frame(width: 20, height: 20)
+                                
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(room.name)
+                                        .font(.system(size: 11, weight: .semibold))
+                                    Text(L10n.onlineLamps(room.lampIds.count))
+                                        .font(.system(size: 9, weight: .medium))
+                                        .foregroundStyle(muted)
+                                }
+                                
+                                Spacer()
+                                
+                                Button {
+                                    editingRoomId = room.id
+                                    newRoomName = room.name
+                                } label: {
+                                    Image(systemName: "pencil.circle")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundStyle(accent)
+                                        .frame(width: 28, height: 28)
+                                }
+                                .buttonStyle(.plain)
+                                
+                                Button {
+                                    var updated = room
+                                    updated.lampIds = []
+                                    if let idx = appState.rooms.firstIndex(where: { $0.id == room.id }) {
+                                        appState.rooms.remove(at: idx)
+                                        appState.persistRooms()
+                                    }
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundStyle(Color.red)
+                                        .frame(width: 28, height: 28)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 6)
+                            .liquidGlassSurface(radius: 10)
+                        }
+
+                        // Lamp assignment
+                        if !appState.lamps.isEmpty {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Assign Lamps")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(muted)
+                                
+                                ForEach(appState.lamps) { lamp in
+                                    HStack(spacing: 8) {
+                                        Text(lamp.name)
+                                            .font(.system(size: 11, weight: .medium))
+                                        Spacer()
+                                        let current = appState.roomForLamp(lamp.id)?.name ?? L10n.roomUnassigned
+                                        Text(current)
+                                            .font(.system(size: 11, weight: .semibold))
+                                            .foregroundStyle(muted)
+
+                                        Menu {
+                                            Button(L10n.roomUnassigned) { appState.unassignLamp(lamp.id) }
+                                            ForEach(appState.rooms) { room in
+                                                Button(room.name) { appState.assignLamp(lamp.id, to: room.id) }
+                                            }
+                                        } label: {
+                                            Image(systemName: "ellipsis.circle")
+                                                .font(.system(size: 12, weight: .semibold))
+                                                .foregroundStyle(accent)
+                                        }
+                                        .menuStyle(BorderlessButtonMenuStyle())
+                                    }
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 6)
+                                    .liquidGlassSurface(radius: 10)
+                                }
+                            }
+                        }
+
+                        if isCreatingRoom {
+                            HStack(spacing: 8) {
+                                TextField("room.name.placeholder", text: $newRoomName)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .textFieldStyle(.roundedBorder)
+                                
+                                Button("Save") {
+                                    let trimmed = newRoomName.trimmingCharacters(in: .whitespacesAndNewlines)
+                                    guard !trimmed.isEmpty else { return }
+                                    appState.rooms.append(Room(name: trimmed))
+                                    appState.persistRooms()
+                                    isCreatingRoom = false
+                                    newRoomName = ""
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .liquidGlassButtonStyle(prominent: true)
+                                
+                                Button("Cancel") {
+                                    isCreatingRoom = false
+                                    newRoomName = ""
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .liquidGlassButtonStyle()
+                            }
+                        }
+
+                        if let editingId = editingRoomId, let idx = appState.rooms.firstIndex(where: { $0.id == editingId }) {
+                            HStack(spacing: 8) {
+                                TextField("room.name.placeholder", text: $newRoomName)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .textFieldStyle(.roundedBorder)
+                                
+                                Button("Save") {
+                                    let trimmed = newRoomName.trimmingCharacters(in: .whitespacesAndNewlines)
+                                    guard !trimmed.isEmpty else { return }
+                                    appState.rooms[idx].name = trimmed
+                                    appState.persistRooms()
+                                    editingRoomId = nil
+                                    newRoomName = ""
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .liquidGlassButtonStyle(prominent: true)
+                                
+                                Button("Cancel") {
+                                    editingRoomId = nil
+                                    newRoomName = ""
+                                }
+                                .buttonStyle(.plain)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .liquidGlassButtonStyle()
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
