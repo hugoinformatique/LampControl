@@ -15,6 +15,10 @@ struct SettingsView: View {
     @State private var editingRoomId: String?
     @State private var newRoomName: String = ""
     @State private var isCreatingRoom = false
+    @State private var editingFocusMappingId: String?
+    @State private var newFocusIdentifier: String = ""
+    @State private var newFocusSceneId: UUID?
+    @State private var isCreatingFocusMapping = false
 
     private let ink = LCTheme.ink
     private let muted = LCTheme.muted
@@ -48,6 +52,7 @@ struct SettingsView: View {
                     case .wiz:         wizSettings
                     case .shortcuts:   shortcutsSettings
                     case .automations: automationsSettings
+                    case .focus:       focusSettings
                     case .circadian:   circadianSettings_
                     case .devices:     devicesSettings
                     case .updates:     updatesSettings
@@ -135,6 +140,14 @@ struct SettingsView: View {
                         ? NSLocalizedString("automations.empty", comment: "")
                         : L10n.automationsActive(appState.automations.filter(\.isEnabled).count),
                     tint: Color.green.opacity(0.10)
+                )
+
+                settingsLink(
+                    .focus,
+                    icon: "target",
+                    title: L10n.focusTitle,
+                    subtitle: L10n.focusSubtitle,
+                    tint: Color.indigo.opacity(0.10)
                 )
 
                 settingsLink(
@@ -804,6 +817,221 @@ struct SettingsView: View {
                 }
             }
             .animation(.spring(response: 0.28, dampingFraction: 0.88), value: isAddingAutomation)
+        }
+    }
+
+    // MARK: - Focus Mode Settings
+
+    private var focusSettings: some View {
+        VStack(spacing: 12) {
+            // Premium gating
+            if !appState.licenseState.entitlements.canUseFocusMappings {
+                settingsGroup {
+                    HStack(spacing: 12) {
+                        Image(systemName: "lock.fill")
+                            .foregroundStyle(Color.yellow)
+                            .frame(width: 24, height: 24)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L10n.focusTitle)
+                                .font(.system(size: 12, weight: .semibold))
+                            Text(L10n.focusPremiumMessage)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(muted)
+                        }
+                        Spacer()
+                        Label("premium.locked", systemImage: "crown.fill")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Color.yellow)
+                    }
+                    .padding(10)
+                    .liquidGlassSurface(radius: 16)
+                }
+            } else {
+                settingsGroup {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Text(L10n.focusTitle)
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(ink)
+                            Spacer()
+                            Button {
+                                isCreatingFocusMapping = true
+                                newFocusIdentifier = ""
+                                newFocusSceneId = nil
+                            } label: {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(accent)
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        if appState.focusMappings.isEmpty {
+                            HStack(spacing: 10) {
+                                Image(systemName: "target")
+                                    .foregroundStyle(muted)
+                                    .frame(width: 24, height: 24)
+                                Text(L10n.focusEmptyMessage)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundStyle(muted)
+                                Spacer()
+                            }
+                            .padding(12)
+                            .liquidGlassSurface(radius: 14)
+                        } else {
+                            ForEach(appState.focusMappings) { mapping in
+                                HStack(spacing: 8) {
+                                    Image(systemName: "target")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundStyle(accent)
+                                        .frame(width: 20, height: 20)
+                                    
+                                    VStack(alignment: .leading, spacing: 1) {
+                                        Text(mapping.focusDisplayName)
+                                            .font(.system(size: 11, weight: .semibold))
+                                        let sceneName = appState.userScenes.first(where: { $0.id == mapping.sceneId })?.title ?? "—"
+                                        Text(sceneName)
+                                            .font(.system(size: 9, weight: .medium))
+                                            .foregroundStyle(muted)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    Toggle("", isOn: Binding(
+                                        get: { mapping.isEnabled },
+                                        set: { enabled in
+                                            var updated = mapping
+                                            updated.isEnabled = enabled
+                                            appState.updateFocusMapping(updated)
+                                        }
+                                    ))
+                                    .labelsHidden()
+                                    .toggleStyle(.switch)
+                                    .tint(accent)
+                                    
+                                    Button {
+                                        editingFocusMappingId = mapping.id
+                                        newFocusIdentifier = mapping.focusIdentifier
+                                        newFocusSceneId = mapping.sceneId
+                                    } label: {
+                                        Image(systemName: "pencil.circle")
+                                            .font(.system(size: 12, weight: .semibold))
+                                            .foregroundStyle(accent)
+                                            .frame(width: 28, height: 28)
+                                    }
+                                    .buttonStyle(.plain)
+                                    
+                                    Button {
+                                        appState.removeFocusMapping(mapping.id)
+                                    } label: {
+                                        Image(systemName: "trash")
+                                            .font(.system(size: 12, weight: .semibold))
+                                            .foregroundStyle(Color.red)
+                                            .frame(width: 28, height: 28)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 6)
+                                .liquidGlassSurface(radius: 10)
+                            }
+                        }
+
+                        // Create new mapping
+                        if isCreatingFocusMapping {
+                            VStack(spacing: 8) {
+                                TextField(L10n.focusIdentifierPlaceholder, text: $newFocusIdentifier)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .textFieldStyle(.roundedBorder)
+                                
+                                Picker(L10n.focusScenePlaceholder, selection: $newFocusSceneId) {
+                                    Text("—").tag(UUID?.none)
+                                    ForEach(appState.userScenes) { scene in
+                                        Text(scene.title).tag(UUID?.some(scene.id))
+                                    }
+                                }
+                                .font(.system(size: 11, weight: .medium))
+                                
+                                HStack(spacing: 8) {
+                                    Button("Save") {
+                                        let trimmed = newFocusIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
+                                        guard !trimmed.isEmpty, newFocusSceneId != nil else { return }
+                                        let mapping = FocusMapping(focusIdentifier: trimmed, focusDisplayName: trimmed, sceneId: newFocusSceneId)
+                                        appState.addFocusMapping(mapping)
+                                        isCreatingFocusMapping = false
+                                        newFocusIdentifier = ""
+                                        newFocusSceneId = nil
+                                    }
+                                    .buttonStyle(.plain)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .liquidGlassButtonStyle(prominent: true)
+                                    
+                                    Button("Cancel") {
+                                        isCreatingFocusMapping = false
+                                        newFocusIdentifier = ""
+                                        newFocusSceneId = nil
+                                    }
+                                    .buttonStyle(.plain)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .liquidGlassButtonStyle()
+                                }
+                            }
+                            .padding(10)
+                            .liquidGlassSurface(radius: 14)
+                        }
+
+                        // Edit mapping
+                        if let editingId = editingFocusMappingId, let idx = appState.focusMappings.firstIndex(where: { $0.id == editingId }) {
+                            VStack(spacing: 8) {
+                                TextField(L10n.focusIdentifierPlaceholder, text: $newFocusIdentifier)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .textFieldStyle(.roundedBorder)
+                                
+                                Picker(L10n.focusScenePlaceholder, selection: $newFocusSceneId) {
+                                    Text("—").tag(UUID?.none)
+                                    ForEach(appState.userScenes) { scene in
+                                        Text(scene.title).tag(UUID?.some(scene.id))
+                                    }
+                                }
+                                .font(.system(size: 11, weight: .medium))
+                                
+                                HStack(spacing: 8) {
+                                    Button("Save") {
+                                        let trimmed = newFocusIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
+                                        guard !trimmed.isEmpty, newFocusSceneId != nil else { return }
+                                        var updated = appState.focusMappings[idx]
+                                        updated.focusIdentifier = trimmed
+                                        updated.focusDisplayName = trimmed
+                                        updated.sceneId = newFocusSceneId
+                                        appState.updateFocusMapping(updated)
+                                        editingFocusMappingId = nil
+                                        newFocusIdentifier = ""
+                                        newFocusSceneId = nil
+                                    }
+                                    .buttonStyle(.plain)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .liquidGlassButtonStyle(prominent: true)
+                                    
+                                    Button("Cancel") {
+                                        editingFocusMappingId = nil
+                                        newFocusIdentifier = ""
+                                        newFocusSceneId = nil
+                                    }
+                                    .buttonStyle(.plain)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .liquidGlassButtonStyle()
+                                }
+                            }
+                            .padding(10)
+                            .liquidGlassSurface(radius: 14)
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -1647,7 +1875,7 @@ private struct AutomationEditor: View {
 
 private enum SettingsRoute {
     case overview, providers, tuya, hue, lifx, govee, yeelight, nanoleaf, wiz
-    case shortcuts, automations, circadian, devices, updates, premium, about
+    case shortcuts, automations, focus, circadian, devices, updates, premium, about
 
     var title: String {
         switch self {
@@ -1662,6 +1890,7 @@ private enum SettingsRoute {
         case .wiz:         NSLocalizedString("route.wiz", comment: "")
         case .shortcuts:   NSLocalizedString("route.shortcuts", comment: "")
         case .automations: NSLocalizedString("route.automations", comment: "")
+        case .focus:       L10n.focusTitle
         case .circadian:   NSLocalizedString("route.circadian", comment: "")
         case .devices:     NSLocalizedString("route.devices", comment: "")
         case .updates:     NSLocalizedString("route.updates", comment: "")
@@ -1703,6 +1932,10 @@ private enum SettingsRoute {
             appState.automations.isEmpty
                 ? L10n.routeAutomationsNone
                 : L10n.routeAutomationsActive(appState.automations.filter(\.isEnabled).count, appState.automations.count)
+        case .focus:
+            appState.focusMappings.isEmpty
+                ? L10n.focusEmptyMessage
+                : "\(appState.focusMappings.filter(\.isEnabled).count) active"
         case .circadian:
             appState.circadianSettings.isEnabled
                 ? L10n.routeCircadianActive(appState.circadianSettings.keyframes.count)

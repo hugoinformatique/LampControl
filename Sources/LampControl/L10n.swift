@@ -58,6 +58,20 @@ enum L10n {
     static var roomNamePlaceholder: String { NSLocalizedString("room.name.placeholder", comment: "") }
     static var roomPremiumMessage: String { NSLocalizedString("room.premium.message", comment: "") }
 
+    // MARK: - Focus Mode strings
+
+    static var focusTitle: String                { NSLocalizedString("focus.title", comment: "") }
+    static var focusSubtitle: String             { NSLocalizedString("focus.subtitle", comment: "") }
+    static var focusMappingAdd: String           { NSLocalizedString("focus.mapping.add", comment: "") }
+    static var focusMappingEdit: String          { NSLocalizedString("focus.mapping.edit", comment: "") }
+    static var focusMappingDelete: String        { NSLocalizedString("focus.mapping.delete", comment: "") }
+    static var focusIdentifierPlaceholder: String { NSLocalizedString("focus.identifier.placeholder", comment: "") }
+    static var focusScenePlaceholder: String     { NSLocalizedString("focus.scene.placeholder", comment: "") }
+    static var focusMappingEnable: String        { NSLocalizedString("focus.mapping.enable", comment: "") }
+    static var focusMappingDisabled: String      { NSLocalizedString("focus.mapping.disabled", comment: "") }
+    static var focusEmptyMessage: String         { NSLocalizedString("focus.empty.message", comment: "") }
+    static var focusPremiumMessage: String       { NSLocalizedString("focus.premium.message", comment: "") }
+
     // MARK: - Lamp status (computed String properties)
 
     static var statusOffline: String { NSLocalizedString("lamp.status.offline", comment: "") }

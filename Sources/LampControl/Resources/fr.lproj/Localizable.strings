@@ -351,3 +351,16 @@
 "room.name.placeholder" = "Nom de la pièce";
 "premium.rooms" = "Pièces";
 "room.premium.message" = "La gestion des pièces est une fonctionnalité Premium";
+
+/* Modes Focus */
+"focus.title" = "Modes Focus";
+"focus.subtitle" = "Appliquer des scènes lorsque le Focus macOS s'active";
+"focus.mapping.add" = "Ajouter un mapping Focus";
+"focus.mapping.edit" = "Modifier";
+"focus.mapping.delete" = "Supprimer";
+"focus.identifier.placeholder" = "Nom du focus";
+"focus.scene.placeholder" = "Sélectionner une scène";
+"focus.mapping.enable" = "Activé";
+"focus.mapping.disabled" = "Mapping désactivé";
+"focus.empty.message" = "Aucun mapping Focus configuré";
+"focus.premium.message" = "L'automatisation des modes Focus est une fonctionnalité Premium";

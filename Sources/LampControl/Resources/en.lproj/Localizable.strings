@@ -351,3 +351,16 @@
 "room.name.placeholder" = "Room name";
 "premium.rooms" = "Rooms";
 "room.premium.message" = "Room management is a Premium feature";
+
+/* Focus Mode Mappings */
+"focus.title" = "Focus Modes";
+"focus.subtitle" = "Apply scenes when macOS Focus activates";
+"focus.mapping.add" = "Add Focus Mapping";
+"focus.mapping.edit" = "Edit";
+"focus.mapping.delete" = "Delete";
+"focus.identifier.placeholder" = "Focus name";
+"focus.scene.placeholder" = "Select scene";
+"focus.mapping.enable" = "Enabled";
+"focus.mapping.disabled" = "Mapping disabled";
+"focus.empty.message" = "No Focus mappings configured";
+"focus.premium.message" = "Focus mode automation is a Premium feature";

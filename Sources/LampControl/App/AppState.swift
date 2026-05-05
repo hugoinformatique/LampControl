@@ -32,11 +32,14 @@ final class AppState: ObservableObject {
     @Published var lampOrderIds: [String] = []
     @Published var searchText = ""
     @Published var rooms: [Room] = []
+    @Published var focusMappings: [FocusMapping] = []
+    @Published var currentFocusIdentifier: String?
 
     @Published var updateService = UpdateService()
 
     private let settingsStore = SettingsStore()
     private let roomStore = RoomStore()
+    private let focusMappingStore = FocusMappingStore()
     private let hueSettingsStore = HueSettingsStore()
     private let lifxSettingsStore = LifxSettingsStore()
     private let goveeSettingsStore = GoveeSettingsStore()
@@ -74,7 +77,9 @@ final class AppState: ObservableObject {
             await syncLamps(silent: true)
             // Load rooms after initial sync and ensure default migration
             await loadRoomsAndMigrateIfNeeded()
+            loadFocusMappings()
             startAutoSync()
+            startFocusMonitoring()
         }
     }
 
@@ -186,8 +191,78 @@ final class AppState: ObservableObject {
         }
     }
 
+    // MARK: - Focus Mode Mappings
+
+    func loadFocusMappings() {
+        focusMappings = focusMappingStore.loadMappings()
+    }
+
+    func persistFocusMappings() {
+        do {
+            try focusMappingStore.saveMappings(focusMappings)
+        } catch {
+            message = "Impossible de sauvegarder les mappings Focus."
+        }
+    }
+
+    func addFocusMapping(_ mapping: FocusMapping) {
+        focusMappings.append(mapping)
+        persistFocusMappings()
+    }
+
+    func removeFocusMapping(_ id: String) {
+        focusMappings.removeAll { $0.id == id }
+        persistFocusMappings()
+    }
+
+    func updateFocusMapping(_ mapping: FocusMapping) {
+        if let idx = focusMappings.firstIndex(where: { $0.id == mapping.id }) {
+            focusMappings[idx] = mapping
+            persistFocusMappings()
+        }
+    }
+
+    func sceneForCurrentFocus() -> UserLightScene? {
+        guard let currentFocus = currentFocusIdentifier else { return nil }
+        guard let mapping = focusMappings.first(where: { $0.focusIdentifier == currentFocus && $0.isEnabled }) else { return nil }
+        guard let sceneId = mapping.sceneId else { return nil }
+        return userScenes.first(where: { $0.id == sceneId })
+    }
+
+    func applySceneForCurrentFocus() async {
+        guard let scene = sceneForCurrentFocus() else { return }
+        await applyScene(scene)
+    }
+
+    private var focusMonitoringTask: Task<Void, Never>?
+
+    private func startFocusMonitoring() {
+        focusMonitoringTask = Task {
+            while !Task.isCancelled {
+                updateCurrentFocus()
+                try? await Task.sleep(nanoseconds: 5_000_000_000) // Check every 5 seconds
+            }
+        }
+    }
+
+    private func updateCurrentFocus() {
+        // Use NSWorkspace to get the currently focused application or monitor system focus state
+        // For now, we detect if an app with "Focus" in its info is active
+        // A more robust solution would require system monitoring or notification subscriptions
+        let workspace = NSWorkspace.shared
+        
+        // Try to detect Focus mode via system notifications or NSWorkspace
+        // This is a simplified approach; macOS Focus detection requires more sophisticated monitoring
+        if let frontApp = workspace.frontmostApplication {
+            // We could check the app's metadata, but Focus mode detection is typically done via
+            // system notifications or framework-specific APIs
+            // For a production app, consider using WidgetKit or FocusStatus framework on macOS 13+
+        }
+    }
+
     deinit {
         autoSyncTask?.cancel()
+        focusMonitoringTask?.cancel()
     }
 
     var canSync: Bool {

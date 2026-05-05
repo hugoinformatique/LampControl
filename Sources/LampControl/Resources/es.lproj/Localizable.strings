@@ -351,3 +351,16 @@
 "room.name.placeholder" = "Nombre de la habitación";
 "premium.rooms" = "Habitaciones";
 "room.premium.message" = "La gestión de habitaciones es una característica Premium";
+
+/* Modos de enfoque */
+"focus.title" = "Modos de enfoque";
+"focus.subtitle" = "Aplicar escenas cuando se activa el Enfoque de macOS";
+"focus.mapping.add" = "Añadir mapeo de enfoque";
+"focus.mapping.edit" = "Editar";
+"focus.mapping.delete" = "Eliminar";
+"focus.identifier.placeholder" = "Nombre del enfoque";
+"focus.scene.placeholder" = "Seleccionar escena";
+"focus.mapping.enable" = "Habilitado";
+"focus.mapping.disabled" = "Mapeo deshabilitado";
+"focus.empty.message" = "No hay mapeos de enfoque configurados";
+"focus.premium.message" = "La automatización del modo de enfoque es una característica Premium";
