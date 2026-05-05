@@ -254,6 +254,14 @@
 "devices.display.options" = "Options d'affichage";
 "devices.hide.offline" = "Masquer les lampes hors ligne";
 
+/* Lampes */
+"lamps.search.placeholder" = "Rechercher des lampes";
+"lamps.filter.empty.title" = "Aucune lampe trouvée";
+"lamps.filter.empty.search" = "Essayez une autre recherche";
+"lamps.filter.empty.offline" = "Toutes les lampes sont hors ligne";
+"lamps.hide.offline.help" = "Masque les lampes actuellement hors ligne";
+"lamps.show.all.help" = "Réaffiche les lampes hors ligne";
+
 /* Mises à jour */
 "updates.title" = "Mises à jour";
 "updates.subtitle" = "Version %@ (build %@)";

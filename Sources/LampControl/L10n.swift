@@ -43,6 +43,8 @@ enum L10n {
     static var syncUpdating: String { NSLocalizedString("lamps.sync.updating", comment: "") }
     static var syncAuto: String     { NSLocalizedString("lamps.sync.auto", comment: "") }
     static var syncNever: String    { NSLocalizedString("sync.never", comment: "") }
+    static var lampsHideOfflineHelp: String { NSLocalizedString("lamps.hide.offline.help", comment: "") }
+    static var lampsShowAllHelp: String     { NSLocalizedString("lamps.show.all.help", comment: "") }
 
     // MARK: - Lamp status (computed String properties)
 

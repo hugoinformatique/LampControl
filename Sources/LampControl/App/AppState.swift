@@ -89,13 +89,16 @@ final class AppState: ObservableObject {
         (hasSecret || !settings.accessSecret.isEmpty)
     }
 
-    var visibleLamps: [LampDevice] {
-        var filtered = lamps
-
-        // Apply license limit
-        if let maxLamps = licenseState.entitlements.maxLamps {
-            filtered = Array(filtered.prefix(maxLamps))
+    private var licensedLamps: [LampDevice] {
+        guard let maxLamps = licenseState.entitlements.maxLamps else {
+            return lamps
         }
+
+        return Array(lamps.prefix(maxLamps))
+    }
+
+    var visibleLamps: [LampDevice] {
+        var filtered = licensedLamps
 
         // Filter offline lamps if toggle is on
         if hideOfflineLamps {
@@ -109,9 +112,10 @@ final class AppState: ObservableObject {
 
         // Apply custom ordering
         if !lampOrderIds.isEmpty {
+            let orderIndex = Dictionary(uniqueKeysWithValues: lampOrderIds.enumerated().map { ($1, $0) })
             filtered.sort { a, b in
-                let aIndex = lampOrderIds.firstIndex(of: a.id) ?? Int.max
-                let bIndex = lampOrderIds.firstIndex(of: b.id) ?? Int.max
+                let aIndex = orderIndex[a.id] ?? Int.max
+                let bIndex = orderIndex[b.id] ?? Int.max
                 return aIndex < bIndex
             }
         }
@@ -120,7 +124,16 @@ final class AppState: ObservableObject {
     }
 
     var hiddenLampCount: Int {
-        max(0, lamps.count - visibleLamps.count)
+        guard let maxLamps = licenseState.entitlements.maxLamps else {
+            return 0
+        }
+
+        return max(0, lamps.count - maxLamps)
+    }
+
+    func updateLampOrder(_ order: [String]) {
+        lampOrderIds = order
+        settingsStore.saveLampOrder(order)
     }
 
     var configuredProviderKinds: [LightProviderKind] {
@@ -282,15 +295,17 @@ final class AppState: ObservableObject {
         }
     }
 
-    func toggle(_ lamp: LampDevice) async {
+    func toggle(_ lamp: LampDevice) async -> Bool {
         updateLamp(lamp.withPower(!lamp.power))
 
         do {
             let updated = try await makeLightProvider(for: lamp).setPower(deviceId: lamp.nativeID, value: !lamp.power)
             updateLamp(updated)
+            return true
         } catch {
             updateLamp(lamp)
             message = error.localizedDescription
+            return false
         }
     }
 

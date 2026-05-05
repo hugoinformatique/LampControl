@@ -254,6 +254,14 @@
 "devices.display.options" = "Display Options";
 "devices.hide.offline" = "Hide offline lamps";
 
+/* Lamps */
+"lamps.search.placeholder" = "Search lamps";
+"lamps.filter.empty.title" = "No lamps found";
+"lamps.filter.empty.search" = "Try a different search";
+"lamps.filter.empty.offline" = "All lamps are offline";
+"lamps.hide.offline.help" = "Hide lamps that are currently offline";
+"lamps.show.all.help" = "Show offline lamps again";
+
 /* Updates */
 "updates.title" = "Updates";
 "updates.subtitle" = "Version %@ (build %@)";

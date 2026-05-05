@@ -254,6 +254,14 @@
 "devices.display.options" = "Opciones de visualización";
 "devices.hide.offline" = "Ocultar lámparas sin conexión";
 
+/* Lámparas */
+"lamps.search.placeholder" = "Buscar lámparas";
+"lamps.filter.empty.title" = "No se encontraron lámparas";
+"lamps.filter.empty.search" = "Prueba con otra búsqueda";
+"lamps.filter.empty.offline" = "Todas las lámparas están sin conexión";
+"lamps.hide.offline.help" = "Oculta las lámparas que están sin conexión";
+"lamps.show.all.help" = "Muestra de nuevo las lámparas sin conexión";
+
 /* Actualizaciones */
 "updates.title" = "Actualizaciones";
 "updates.subtitle" = "Versión %@ (build %@)";

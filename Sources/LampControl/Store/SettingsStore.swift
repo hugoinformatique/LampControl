@@ -27,8 +27,7 @@ final class SettingsStore {
     }
 
     func saveLampOrder(_ order: [String]) {
-        let orderDict = ["lampOrder": order]
-        if let data = try? JSONEncoder().encode(orderDict) {
+        if let data = try? JSONEncoder().encode(order) {
             try? data.write(to: lampOrderURL, options: .atomic)
         }
     }
@@ -38,9 +37,8 @@ final class SettingsStore {
             return []
         }
         let data = try? Data(contentsOf: lampOrderURL)
-        if let data,
-           let dict = try? JSONDecoder().decode([String: [String]].self, from: data),
-           let order = dict["lampOrder"] {
+          if let data,
+              let order = try? JSONDecoder().decode([String].self, from: data) {
             return order
         }
         return []

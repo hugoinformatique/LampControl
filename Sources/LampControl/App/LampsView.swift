@@ -3,6 +3,7 @@ import AppKit
 
 struct LampsView: View {
     @EnvironmentObject private var appState: AppState
+    @State private var draggedLampID: String?
     private let ink = LCTheme.ink
     private let muted = LCTheme.muted
     private let accent = LCTheme.accent
@@ -28,7 +29,7 @@ struct LampsView: View {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(muted)
-                        TextField("Search lamps...", text: $appState.searchText)
+                        TextField("lamps.search.placeholder", text: $appState.searchText)
                             .font(.system(size: 12, weight: .regular))
                             .textFieldStyle(.plain)
                         if !appState.searchText.isEmpty {
@@ -56,7 +57,7 @@ struct LampsView: View {
                             .frame(width: 32, height: 32)
                     }
                     .liquidGlassButtonStyle()
-                    .help(appState.hideOfflineLamps ? "Show all lamps" : "Hide offline lamps")
+                    .help(appState.hideOfflineLamps ? L10n.lampsShowAllHelp : L10n.lampsHideOfflineHelp)
                 }
                 .padding(.horizontal, 2)
             }
@@ -73,10 +74,10 @@ struct LampsView: View {
                         .frame(width: 28, height: 28)
                         .liquidGlassCircle()
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("No lamps found")
+                        Text("lamps.filter.empty.title")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(ink)
-                        Text(appState.hideOfflineLamps ? "All lamps are offline" : "Try a different search")
+                        Text(appState.hideOfflineLamps ? "lamps.filter.empty.offline" : "lamps.filter.empty.search")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(muted)
                     }
@@ -99,25 +100,25 @@ struct LampsView: View {
             LazyVStack(spacing: 8) {
                 ForEach(appState.visibleLamps) { lamp in
                     LampRow(lamp: lamp)
-                }
-                .onMove { source, destination in
-                    // Initialize lampOrderIds if empty
-                    if appState.lampOrderIds.isEmpty {
-                        appState.lampOrderIds = appState.lamps.map { $0.id }
-                    }
-                    
-                    // Move items in the lampOrderIds array
-                    var updatedOrder = appState.lampOrderIds
-                    updatedOrder.move(fromOffsets: source, toOffset: destination)
-                    appState.lampOrderIds = updatedOrder
-                    
-                    // Persist to disk
-                    let store = SettingsStore()
-                    store.saveLampOrder(updatedOrder)
+                        .opacity(draggedLampID == lamp.id ? 0.72 : 1)
+                        .onDrag {
+                            draggedLampID = lamp.id
+                            return NSItemProvider(object: lamp.id as NSString)
+                        }
+                        .onDrop(of: [.text], delegate: LampReorderDropDelegate(
+                            targetLamp: lamp,
+                            draggedLampID: $draggedLampID,
+                            appState: appState,
+                            canReorder: canReorderLamps
+                        ))
                 }
             }
         }
         .foregroundStyle(ink)
+    }
+
+    private var canReorderLamps: Bool {
+        appState.searchText.isEmpty && !appState.hideOfflineLamps
     }
 
     private var onboardingCard: some View {
@@ -669,7 +670,8 @@ private struct LampRow: View {
             HStack(spacing: 8) {
                 Button {
                     Task {
-                        await appState.toggle(lamp)
+                        let success = await appState.toggle(lamp)
+                        guard success else { return }
                         withAnimation(.easeInOut(duration: 0.2)) {
                             showingFeedback = true
                         }
@@ -992,6 +994,44 @@ private struct LampRow: View {
             return min(1000, max(10, Int(round(normalized * 1000.0))))
         }
         return HSVColor.defaultColorValue
+    }
+}
+
+private struct LampReorderDropDelegate: DropDelegate {
+    let targetLamp: LampDevice
+    @Binding var draggedLampID: String?
+    let appState: AppState
+    let canReorder: Bool
+
+    func dropEntered(info: DropInfo) {
+        guard canReorder,
+              let draggedLampID,
+              draggedLampID != targetLamp.id
+        else { return }
+
+        var updatedOrder = appState.lampOrderIds
+        if updatedOrder.isEmpty {
+            updatedOrder = appState.lamps.map(\.id)
+        }
+
+        guard let movingIndex = updatedOrder.firstIndex(of: draggedLampID),
+              let dropIndex = updatedOrder.firstIndex(of: targetLamp.id) else { return }
+
+        let item = updatedOrder.remove(at: movingIndex)
+        let destination = movingIndex < dropIndex ? dropIndex - 1 : dropIndex
+        updatedOrder.insert(item, at: max(0, destination))
+        appState.updateLampOrder(updatedOrder)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        draggedLampID = nil
+        return true
+    }
+
+    func dropExited(info: DropInfo) {
+        if draggedLampID == targetLamp.id {
+            draggedLampID = nil
+        }
     }
 }
 
