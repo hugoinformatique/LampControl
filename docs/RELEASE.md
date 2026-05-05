@@ -52,9 +52,9 @@ users on first launch.
 - **Repo → Settings → Pages**
 - **Source:** *GitHub Actions*
 
-The workflow uploads the appcast to Pages automatically; this just lets the
-deployment land on `https://huggooo26.github.io/LampControl/appcast.xml`,
-which is the URL embedded in `Info.plist` (`SUFeedURL`).
+ The workflow uploads the appcast to Pages automatically; this just lets the
+ deployment land on `https://hugoinformatique.github.io/LampControl/appcast.xml`,
+ which is the URL embedded in `Info.plist` (`SUFeedURL`).
 
 ## Cutting a release
 

@@ -6,7 +6,7 @@
 >
 > 🇫🇷 [Lire ce README en français](README.fr.md)
 
-[![Latest release](https://img.shields.io/github/v/release/huggooo26/LampControl?label=release)](https://github.com/huggooo26/LampControl/releases/latest)
+[![Latest release](https://img.shields.io/github/v/release/hugoinformatique/LampControl?label=release)](https://github.com/hugoinformatique/LampControl/releases/latest)
 [![macOS 13+](https://img.shields.io/badge/macOS-13%2B-blue)](https://www.apple.com/macos/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -45,7 +45,7 @@ provider show up in a single sorted list.
 ### Option A — Download the DMG
 
 1. Grab the latest DMG from the
-   [Releases page](https://github.com/huggooo26/LampControl/releases/latest).
+  [Releases page](https://github.com/hugoinformatique/LampControl/releases/latest).
 2. Open `LampControl.dmg`, drag `LampControl.app` to `/Applications`.
 3. **First launch — bypass Gatekeeper** (the app is ad-hoc signed until we
    enrol an Apple Developer ID; see [known limitations](#known-limitations)).
@@ -66,7 +66,7 @@ provider show up in a single sorted list.
 ### Option B — Build from source
 
 ```bash
-git clone https://github.com/huggooo26/LampControl.git
+git clone https://github.com/hugoinformatique/LampControl.git
 cd LampControl
 ./scripts/build_app.sh
 open dist/LampControl.app

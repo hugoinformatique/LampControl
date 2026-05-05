@@ -730,7 +730,7 @@ final class AppState: ObservableObject {
             throw LampControlError.configuration("Identifiants Tuya incomplets. Ouvrez les réglages.")
         }
 
-        let client = TuyaClient(accessId: settings.accessId, accessSecret: secret, endpoint: settings.endpoint)
+        let client = try TuyaClient(accessId: settings.accessId, accessSecret: secret, endpoint: settings.endpoint)
         let service = TuyaLightProvider(client: client, uid: settings.uid)
         return service
     }
@@ -1041,6 +1041,30 @@ final class AppState: ObservableObject {
     private func loadLicense() {
         do {
             licenseState = try licenseStore.load()
+
+            // Validate license with provider asynchronously at startup to prevent
+            // local tampering of license.json (if the file was edited to be premium).
+            Task { [weak self] in
+                guard let self = self else { return }
+                do {
+                    let validated = try await licenseActivationService.validate(self.licenseState)
+                    await MainActor.run {
+                        self.licenseState = validated
+                        do {
+                            try self.licenseStore.save(validated)
+                        } catch {
+                            // non-fatal: keep in-memory state
+                        }
+                    }
+                } catch {
+                    // Validation failed: downgrade to early access and persist.
+                    await MainActor.run {
+                        self.licenseState = .earlyAccess
+                        try? self.licenseStore.save(self.licenseState)
+                        self.message = "Licence non validée en ligne. Early Access actif."
+                    }
+                }
+            }
         } catch {
             licenseState = .earlyAccess
             message = "Licence locale illisible. Early Access actif."

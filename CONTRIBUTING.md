@@ -7,7 +7,7 @@ coverage, reliability, accessibility, or polish is welcome.
 ## Quick start
 
 ```bash
-git clone https://github.com/huggooo26/LampControl.git
+git clone https://github.com/hugoinformatique/LampControl.git
 cd LampControl
 swift build
 ./scripts/build_app.sh

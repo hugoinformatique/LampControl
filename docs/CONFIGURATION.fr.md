@@ -185,7 +185,7 @@ vérifiez que tous les produits listés à l'étape 2 sont bien activés.
 
 Ouvrez la lampe dans Smart Life et confirmez qu'elle répond. Si oui, notez
 le modèle de la lampe et ouvrez une
-[issue](https://github.com/huggooo26/LampControl/issues) — certains
+[issue](https://github.com/hugoinformatique/LampControl/issues) — certains
 firmwares exposent des codes de capacités inhabituels que nous ne gérons
 peut-être pas encore.
 
@@ -229,7 +229,7 @@ périmètre.
 
 **Où signaler un bug ?**
 
-[GitHub Issues](https://github.com/huggooo26/LampControl/issues) — merci
+[GitHub Issues](https://github.com/hugoinformatique/LampControl/issues) — merci
 d'indiquer la version macOS, la version LampControl, et le modèle de la
 lampe.
 

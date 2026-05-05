@@ -179,7 +179,7 @@ ensure all the products listed in step 2 are enabled.
 
 Open the lamp in the Smart Life app and confirm it responds there. If yes,
 note the lamp model and open an
-[issue](https://github.com/huggooo26/LampControl/issues) — some firmwares
+[issue](https://github.com/hugoinformatique/LampControl/issues) — some firmwares
 expose unusual capability codes that we may not yet handle.
 
 ### Token expired errors
@@ -221,7 +221,7 @@ lamps that never sync to the cloud are out of scope.
 
 **Where do I report a bug?**
 
-[GitHub Issues](https://github.com/huggooo26/LampControl/issues) — please
+[GitHub Issues](https://github.com/hugoinformatique/LampControl/issues) — please
 include macOS version, LampControl version, and the lamp model.
 
 ---

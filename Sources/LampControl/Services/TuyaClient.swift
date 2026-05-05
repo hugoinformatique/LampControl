@@ -9,10 +9,13 @@ final class TuyaClient {
     private var accessToken = ""
     private var tokenExpiresAt = Date.distantPast
 
-    init(accessId: String, accessSecret: String, endpoint: String, session: URLSession = .shared) {
+    init(accessId: String, accessSecret: String, endpoint: String, session: URLSession = .shared) throws {
         self.accessId = accessId
         self.accessSecret = accessSecret
-        self.endpoint = URL(string: endpoint)!
+        guard let endpointURL = URL(string: endpoint) else {
+            throw LampControlError.configuration("Endpoint Tuya invalide.")
+        }
+        self.endpoint = endpointURL
         self.session = session
     }
 

@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LampControl - App macOS pour lampes connectées</title>
+    <meta
+      name="description"
+      content="Contrôlez vos lampes connectées Hue, LIFX, Govee, Yeelight et Tuya depuis la barre de menu macOS. Gratuit, Premium lifetime à 5,99 EUR."
+    />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://lampcontrol.app/" />
+    <link rel="alternate" hreflang="fr" href="https://lampcontrol.app/" />
+    <link rel="alternate" hreflang="en" href="https://lampcontrol.app/en/" />
+    <link rel="alternate" hreflang="es" href="https://lampcontrol.app/es/" />
+    <link rel="alternate" hreflang="x-default" href="https://lampcontrol.app/en/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://lampcontrol.app/" />
+    <meta property="og:title" content="LampControl - toutes vos lampes dans la barre de menu Mac" />
+    <meta
+      property="og:description"
+      content="Une app macOS native pour piloter Hue, LIFX, Govee, Yeelight et Tuya sans ouvrir cinq apps différentes."
+    />
+    <meta property="og:image" content="https://lampcontrol.app/og-image.svg" />
+    <meta property="og:image:alt" content="LampControl, app macOS pour contrôler Hue, LIFX, Govee, Yeelight et Tuya depuis la barre de menu Mac" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="LampControl - App macOS pour lampes connectées" />
+    <meta
+      name="twitter:description"
+      content="Contrôlez Hue, LIFX, Govee, Yeelight et Tuya depuis une seule app de barre de menu macOS."
+    />
+    <meta name="twitter:image" content="https://lampcontrol.app/og-image.svg" />
+    <meta name="twitter:image:alt" content="Aperçu de LampControl et de son offre Premium lifetime à 5,99 EUR" />
+    <meta name="theme-color" content="#101010" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "LampControl",
+        "url": "https://lampcontrol.app/",
+        "downloadUrl": "https://github.com/hugoinformatique/LampControl/releases/latest",
+        "softwareVersion": "1.1.0",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "macOS 13+",
+        "offers": {
+          "@type": "Offer",
+          "price": "5.99",
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock"
+        },
+        "image": "https://lampcontrol.app/og-image.svg",
+        "author": {
+          "@type": "Organization",
+          "name": "Hugo Informatique"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Hugo Informatique"
+        },
+        "description": "App macOS de barre de menu pour contrôler plusieurs marques de lampes connectées depuis une seule interface."
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "LampControl est-il gratuit ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Oui. L'offre gratuite permet de commencer avec les contrôles de base et jusqu'à 2 lampes. Premium débloque les lampes illimitées, groupes, scènes personnalisées, automations et éclairage adaptatif."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "La licence Premium est-elle un abonnement ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Non. Premium est une licence lifetime à 5,99 EUR, vendue via Lemon Squeezy."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Quelles marques de lampes connectées sont compatibles ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "LampControl prend en charge Tuya / Smart Life, Philips Hue, LIFX, Govee et Yeelight."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Comment installer LampControl sur Mac ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Téléchargez la dernière release GitHub, ouvrez le DMG, glissez LampControl dans Applications, puis lancez l'app depuis macOS."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "LampControl remplace-t-il HomeKit ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Non. LampControl est un contrôle rapide depuis la barre de menu Mac pour plusieurs fournisseurs, utile même si votre installation HomeKit reste en place."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Pourquoi utiliser LampControl plutôt que les apps Hue, LIFX ou Govee ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "LampControl évite de changer d'app pour chaque marque et met les contrôles utiles dans une seule interface macOS."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Quelle version de macOS est nécessaire ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "LampControl est prévu pour macOS 13 ou plus récent."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Puis-je utiliser plusieurs marques de lampes ensemble ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Oui. LampControl sert à regrouper plusieurs écosystèmes de lampes connectées dans une seule app Mac."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Que se passe-t-il après l'achat ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Lemon Squeezy vous donne une clé. Collez-la dans Réglages > Premium pour activer les fonctionnalités débloquées."
+            }
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Aller au contenu</a>
+    <header class="site-header" data-header>
+      <a class="brand" href="#main" aria-label="LampControl accueil">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>LampControl</span>
+      </a>
+      <nav class="nav-links" aria-label="Navigation principale">
+        <a href="#features">Fonctions</a>
+        <a href="#pricing">Prix <span>5,99 EUR</span></a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <nav class="language-switcher" aria-label="Changer de langue">
+        <a aria-current="page" href="./">FR</a>
+        <a href="./en/">EN</a>
+        <a href="./es/">ES</a>
+      </nav>
+      <a class="header-cta" href="https://github.com/hugoinformatique/LampControl/releases/latest">Télécharger</a>
+    </header>
+
+    <main id="main">
+      <section class="hero section-band">
+        <div class="pixel-field" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+
+        <div class="hero-grid shell">
+          <div class="hero-copy">
+            <div class="status-pill">
+              <span></span>
+              macOS 13+ / Freemium / Lifetime
+            </div>
+            <h1>Contrôlez Hue, LIFX, Govee, Yeelight et Tuya depuis la barre de menu Mac.</h1>
+            <blockquote class="aeo-answer">
+              LampControl est une app macOS freemium qui permet de contrôler Philips Hue, LIFX, Govee, Yeelight et Tuya depuis la barre de menu du Mac, sans ouvrir plusieurs apps mobiles.
+            </blockquote>
+            <p class="hero-subtitle">
+              LampControl réunit vos lampes connectées dans une app macOS
+              native: on/off, couleurs, scènes, groupes et automations, sans
+              téléphone et sans jongler entre cinq applications.
+            </p>
+            <nav class="hero-actions" aria-label="Actions principales">
+              <a class="button button-primary" href="https://github.com/hugoinformatique/LampControl/releases/latest">
+                Télécharger pour macOS
+              </a>
+              <a class="button button-secondary" href="https://lampcontrol.lemonsqueezy.com/checkout/buy/12d32ac2-9a5a-4120-a95e-36a10afb51d9">
+                Débloquer Premium - 5,99 EUR
+              </a>
+            </nav>
+            <p class="microcopy">Licence lifetime. Paiement sécurisé Lemon Squeezy. Pas d'Electron.</p>
+            <div class="install-command" aria-label="Installation en ligne de commande">
+              <div class="install-command-top">
+                <span>Terminal</span>
+                <button type="button" data-copy-command>Copier</button>
+              </div>
+              <code data-install-command>curl -fsSL https://api.github.com/repos/hugoinformatique/LampControl/releases/latest | grep browser_download_url | cut -d '"' -f 4 | xargs curl -L -o ~/Downloads/LampControl.dmg &amp;&amp; open ~/Downloads/LampControl.dmg</code>
+            </div>
+          </div>
+
+          <figure class="product-panel">
+            <figcaption class="visually-hidden">Aperçu de l'interface LampControl avec plusieurs lampes synchronisées.</figcaption>
+            <div class="panel-top">
+              <span class="window-dot"></span>
+              <span>LampControl.menu</span>
+              <strong>SYNC OK</strong>
+            </div>
+            <div class="lamp-list">
+              <div class="lamp-row active">
+                <span class="lamp-icon"></span>
+                <div>
+                  <strong>Salon Hue</strong>
+                  <small>ON / 64% / chaud</small>
+                </div>
+                <span class="toggle-indicator" aria-hidden="true"></span>
+              </div>
+              <div class="lamp-row">
+                <span class="lamp-icon amber"></span>
+                <div>
+                  <strong>Bureau LIFX</strong>
+                  <small>Scène Focus</small>
+                </div>
+                <span class="toggle-indicator" aria-hidden="true"></span>
+              </div>
+              <div class="lamp-row">
+                <span class="lamp-icon green"></span>
+                <div>
+                  <strong>Setup Govee</strong>
+                  <small>RGB / groupe Mac</small>
+                </div>
+                <span class="toggle-indicator" aria-hidden="true"></span>
+              </div>
+            </div>
+            <div class="terminal-strip">
+              <span>$ premium.unlock</span>
+              <strong>unlimited_lamps=true</strong>
+            </div>
+          </figure>
+        </div>
+      </section>
+
+      <section class="proof-strip shell" aria-label="Signaux de confiance LampControl">
+        <div>
+          <strong>5 écosystèmes</strong>
+          <span>Tuya, Hue, LIFX, Govee, Yeelight</span>
+        </div>
+        <div>
+          <strong>Barre de menu</strong>
+          <span>une action, sans ouvrir d'app mobile</span>
+        </div>
+        <div>
+          <strong>Keychain</strong>
+          <span>tokens stockés localement sur macOS</span>
+        </div>
+      </section>
+
+      <section id="features" class="section shell">
+        <div class="section-heading">
+          <span class="eyebrow">PROBLÈME</span>
+          <h2>Changer la lumière de son bureau ne devrait pas interrompre le travail.</h2>
+          <p>
+            Quand vos lampes dépendent de plusieurs marques, le moindre réglage
+            devient lent: téléphone à retrouver, apps différentes, cloud qui
+            répond plus ou moins vite, scènes dispersées.
+          </p>
+        </div>
+      </section>
+
+      <section class="section shell tight-section">
+        <div class="section-heading">
+          <span class="eyebrow">SOLUTION</span>
+          <h2>LampControl met le contrôle lumière là où vous êtes déjà: sur votre Mac.</h2>
+          <p>
+            Depuis la barre de menu macOS, vous pilotez vos lampes Hue, LIFX,
+            Govee, Yeelight et Tuya dans une seule interface légère.
+          </p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <span class="feature-index">01</span>
+            <h3>Un seul endroit pour toutes les marques</h3>
+            <p>Mélangez Hue, LIFX, Govee, Yeelight et Tuya sans reconstruire toute votre maison connectée.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-index">02</span>
+            <h3>Native, légère, invisible</h3>
+            <p>Une app de barre de menu macOS, sans fenêtre Dock permanente, pensée pour rester hors du chemin.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-index">03</span>
+            <h3>Scènes et groupes pour travailler vite</h3>
+            <p>Appliquez une ambiance à plusieurs lampes, gardez vos presets, changez l'état du bureau en quelques secondes.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-index">04</span>
+            <h3>Automations et éclairage adaptatif</h3>
+            <p>Premium débloque les routines, les scènes personnalisées et l'éclairage qui suit votre journée.</p>
+          </article>
+        </div>
+        <div class="benefit-table" role="table" aria-label="Fonctions LampControl et bénéfices">
+          <div class="benefit-row benefit-head" role="row">
+            <span role="columnheader">Fonction</span>
+            <span role="columnheader">Ce que ça change pour vous</span>
+          </div>
+          <div class="benefit-row" role="row">
+            <span role="cell">Contrôle multi-marques</span>
+            <span role="cell">Pilotez Hue, LIFX, Govee, Yeelight et Tuya sans changer d'app.</span>
+          </div>
+          <div class="benefit-row" role="row">
+            <span role="cell">Barre de menu macOS</span>
+            <span role="cell">Changez l'ambiance du bureau en un clic, sans téléphone.</span>
+          </div>
+          <div class="benefit-row" role="row">
+            <span role="cell">Groupes et scènes</span>
+            <span role="cell">Appliquez une ambiance à plusieurs lampes en même temps.</span>
+          </div>
+          <div class="benefit-row" role="row">
+            <span role="cell">Automations Premium</span>
+            <span role="cell">Automatisez vos routines lumière sans abonnement.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="mid-cta shell" aria-label="Essayer LampControl">
+        <div>
+          <span class="eyebrow">ESSAI GRATUIT</span>
+          <h2>Essayez LampControl avec deux lampes gratuitement.</h2>
+        </div>
+        <nav class="hero-actions" aria-label="Actions essai gratuit">
+          <a class="button button-primary" href="https://github.com/hugoinformatique/LampControl/releases/latest">Télécharger pour macOS</a>
+          <a class="button button-secondary" href="#pricing">Voir Gratuit vs Premium</a>
+        </nav>
+      </section>
+
+      <section class="section section-band">
+        <div class="how-it-works shell">
+          <div class="section-heading compact">
+            <span class="eyebrow">COMMENT ÇA MARCHE</span>
+            <h2>Installez, connectez, contrôlez.</h2>
+          </div>
+          <ol class="steps-list">
+            <li>
+              <span>01</span>
+              <strong>Téléchargez LampControl</strong>
+              <p>Installez le DMG depuis la dernière release et lancez l'app dans la barre de menu macOS.</p>
+            </li>
+            <li>
+              <span>02</span>
+              <strong>Ajoutez vos fournisseurs</strong>
+              <p>Connectez Hue, LIFX, Govee, Yeelight ou Tuya avec les identifiants requis par chaque écosystème.</p>
+            </li>
+            <li>
+              <span>03</span>
+              <strong>Débloquez ce qui compte</strong>
+              <p>Gardez le gratuit pour tester, ou activez Premium lifetime pour les lampes illimitées, groupes et automations.</p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="section section-band">
+        <div class="comparison shell">
+          <div class="section-heading compact">
+            <span class="eyebrow">AVANT / APRÈS</span>
+            <h2>Moins de friction, plus de lumière juste.</h2>
+          </div>
+          <div class="compare-grid">
+            <div class="compare-column muted">
+              <h3>Avant</h3>
+              <p>Téléphone, apps par marque, menus cloud, pièces séparées, réglages perdus.</p>
+            </div>
+            <div class="compare-column">
+              <h3>Avec LampControl</h3>
+              <p>Un clic dans la barre de menu. Toutes les lampes utiles. Couleurs, groupes, scènes et sync silencieuse.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section shell">
+        <div class="section-heading">
+          <span class="eyebrow">COMPARAISON</span>
+          <h2>LampControl est fait pour le bureau Mac, pas pour remplacer toute votre smart home.</h2>
+        </div>
+        <div class="comparison-table" role="table" aria-label="Comparaison entre LampControl et les alternatives">
+          <div class="comparison-row comparison-head" role="row">
+            <span role="columnheader">Option</span>
+            <span role="columnheader">Là où c'est fort</span>
+            <span role="columnheader">La friction</span>
+          </div>
+          <div class="comparison-row" role="row">
+            <span role="cell">LampControl</span>
+            <span role="cell">Contrôle rapide multi-marques depuis macOS, app native, prix lifetime bas.</span>
+            <span role="cell">Mac uniquement et configuration fournisseur parfois nécessaire.</span>
+          </div>
+          <div class="comparison-row" role="row">
+            <span role="cell">Apps Hue, LIFX, Govee, Tuya</span>
+            <span role="cell">Complètes pour chaque écosystème, souvent meilleures pour l'installation initiale.</span>
+            <span role="cell">Une app par marque, souvent sur téléphone, moins pratique au bureau.</span>
+          </div>
+          <div class="comparison-row" role="row">
+            <span role="cell">HomeKit</span>
+            <span role="cell">Très bon pour l'automatisation Apple et les foyers déjà compatibles.</span>
+            <span role="cell">Compatibilité variable et moins direct pour certains setups multi-marques.</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="pricing" class="section shell">
+        <div class="section-heading">
+          <span class="eyebrow">PRIX SIMPLE</span>
+          <h2>Commencez gratuitement. Payez une fois si LampControl devient votre réflexe.</h2>
+        </div>
+
+        <div class="pricing-grid">
+          <article class="price-card">
+            <div class="price-top">
+              <h3>Gratuit</h3>
+              <strong>0 EUR</strong>
+            </div>
+            <p>Pour tester le flow et piloter vos premières lampes depuis macOS.</p>
+            <ul>
+              <li>Jusqu'à 2 lampes</li>
+              <li>Contrôle de base on/off</li>
+              <li>Ambiances rapides incluses</li>
+              <li>Updates via releases GitHub</li>
+            </ul>
+            <a class="button button-muted" href="https://github.com/hugoinformatique/LampControl/releases/latest">Télécharger</a>
+          </article>
+
+          <article class="price-card featured">
+            <div class="price-badge">MEILLEUR CHOIX</div>
+            <div class="price-top">
+              <h3>Premium lifetime</h3>
+              <strong>5,99 EUR</strong>
+            </div>
+            <p>Tout débloquer sans abonnement. Idéal si votre setup lumière vit vraiment autour du Mac.</p>
+            <ul>
+              <li>Lampes illimitées</li>
+              <li>Groupes multi-marques</li>
+              <li>Scènes personnalisées</li>
+              <li>Automations</li>
+              <li>Éclairage adaptatif</li>
+            </ul>
+            <a class="button button-primary" href="https://lampcontrol.lemonsqueezy.com/checkout/buy/12d32ac2-9a5a-4120-a95e-36a10afb51d9">
+              Acheter la licence
+            </a>
+          </article>
+        </div>
+      </section>
+
+      <section class="section shell">
+        <div class="quote-block">
+          <span class="eyebrow">NOTE DU CRÉATEUR</span>
+          <p>
+            "J'ai fait LampControl parce que changer la lumière de mon bureau
+            ne devrait pas demander de déverrouiller mon téléphone, ouvrir une
+            app, attendre le cloud, puis répéter pour une autre marque."
+          </p>
+          <strong>Hugo Informatique, créateur de LampControl</strong>
+        </div>
+      </section>
+
+      <section id="faq" class="section shell">
+        <div class="section-heading compact">
+          <span class="eyebrow">FAQ</span>
+          <h2>Les objections normales avant d'installer une app lumière.</h2>
+        </div>
+        <div class="faq-list">
+          <details>
+            <summary>LampControl est-il gratuit ?</summary>
+            <p>Oui. L'offre gratuite permet de commencer avec les contrôles de base et jusqu'à 2 lampes.</p>
+          </details>
+          <details>
+            <summary>Est-ce un abonnement ?</summary>
+            <p>Non. Premium est une licence lifetime à 5,99 EUR via Lemon Squeezy.</p>
+          </details>
+          <details>
+            <summary>Quelles marques de lampes connectées sont compatibles ?</summary>
+            <p>LampControl prend en charge Tuya / Smart Life, Philips Hue, LIFX, Govee et Yeelight.</p>
+          </details>
+          <details>
+            <summary>Comment installer LampControl sur Mac ?</summary>
+            <p>Téléchargez la dernière release GitHub, ouvrez le DMG, glissez l'app dans Applications, puis lancez LampControl.</p>
+          </details>
+          <details>
+            <summary>Mes clés API sont-elles envoyées ailleurs ?</summary>
+            <p>Les secrets sont stockés dans le Keychain macOS. LampControl appelle les APIs nécessaires pour piloter vos fournisseurs, sans secret Lemon Squeezy embarqué.</p>
+          </details>
+          <details>
+            <summary>LampControl remplace-t-il HomeKit ?</summary>
+            <p>Non. LampControl est un contrôle rapide depuis la barre de menu Mac. HomeKit reste utile si votre maison connectée est déjà bien configurée.</p>
+          </details>
+          <details>
+            <summary>Pourquoi utiliser LampControl plutôt que les apps Hue, LIFX ou Govee ?</summary>
+            <p>LampControl évite de changer d'app pour chaque marque et met les contrôles utiles dans une seule interface macOS.</p>
+          </details>
+          <details>
+            <summary>Pourquoi une app Mac plutôt qu'une app mobile ?</summary>
+            <p>Parce que beaucoup de setups lumière servent le bureau: visio, focus, gaming, création, streaming. Le contrôle doit être là où vous travaillez.</p>
+          </details>
+          <details>
+            <summary>Quelle version de macOS est nécessaire ?</summary>
+            <p>LampControl est prévu pour macOS 13 ou plus récent.</p>
+          </details>
+          <details>
+            <summary>Puis-je utiliser plusieurs marques de lampes ensemble ?</summary>
+            <p>Oui. LampControl sert à regrouper plusieurs écosystèmes de lampes connectées dans une seule app Mac.</p>
+          </details>
+          <details>
+            <summary>Que se passe-t-il après l'achat ?</summary>
+            <p>Lemon Squeezy vous donne une clé. Collez-la dans Réglages > Premium pour activer les fonctionnalités débloquées.</p>
+          </details>
+        </div>
+      </section>
+
+      <section class="final-cta section-band">
+        <div class="shell">
+          <span class="eyebrow">PRÊT POUR LE BUREAU</span>
+          <h2>Installez LampControl, connectez deux lampes, voyez si le réflexe prend.</h2>
+          <p class="final-copy">Gratuit pour tester. Premium à 5,99 EUR si vous voulez tout débloquer.</p>
+          <nav class="hero-actions centered" aria-label="Actions finales">
+            <a class="button button-primary" href="https://github.com/hugoinformatique/LampControl/releases/latest">Télécharger gratuit</a>
+            <a class="button button-secondary" href="https://lampcontrol.lemonsqueezy.com/checkout/buy/12d32ac2-9a5a-4120-a95e-36a10afb51d9">Passer Premium</a>
+          </nav>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer shell">
+      <span>LampControl © 2026 Hugo Informatique</span>
+      <div>
+        <a href="https://github.com/hugoinformatique/LampControl">GitHub</a>
+        <a href="https://github.com/hugoinformatique/LampControl/releases/latest">Releases</a>
+        <a href="https://lampcontrol.lemonsqueezy.com/checkout/buy/12d32ac2-9a5a-4120-a95e-36a10afb51d9">Premium</a>
+      </div>
+    </footer>
+
+    <script src="./script.js" defer></script>
+  </body>
+</html>
