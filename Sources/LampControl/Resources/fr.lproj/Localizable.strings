@@ -63,6 +63,7 @@
 "onboarding.step2.detail" = "Le Secret reste stocké dans le Keychain.";
 "onboarding.step3.title" = "Tester la synchronisation";
 "onboarding.step3.detail" = "LampControl détecte ensuite les lampes compatibles.";
+"onboarding.next" = "Suivant";
 "onboarding.configure" = "Configurer";
 "onboarding.guide" = "Ouvrir le guide";
 "onboarding.dismiss" = "Masquer";
@@ -88,6 +89,7 @@
 
 /* Navigation des réglages */
 "settings.back" = "Retour";
+"settings.providers.section" = "Fournisseurs";
 "route.settings.sub.active" = "Configuration active";
 "route.settings.sub.required" = "Configuration requise";
 "route.providers.subtitle" = "Tuya, Hue, LIFX, Govee, Yeelight, Nanoleaf, WiZ";
@@ -256,6 +258,7 @@
 
 /* Lampes */
 "lamps.search.placeholder" = "Rechercher des lampes";
+"lamps.unassigned" = "Non assignées";
 "lamps.filter.empty.title" = "Aucune lampe trouvée";
 "lamps.filter.empty.search" = "Essayez une autre recherche";
 "lamps.filter.empty.offline" = "Toutes les lampes sont hors ligne";

@@ -20,49 +20,48 @@ struct LampsView: View {
     }
 
     private var content: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: LCSpacing.sm) {
             statusBar
 
-            // Search and filter controls (A5, A2)
+            // Search and filter controls
             if !appState.lamps.isEmpty && appState.canSync {
-                HStack(spacing: 10) {
-                    HStack(spacing: 6) {
+                HStack(spacing: LCSpacing.xs) {
+                    HStack(spacing: 8) {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(muted)
                         TextField("lamps.search.placeholder", text: $appState.searchText)
-                            .font(.system(size: 12, weight: .regular))
+                            .font(LCTypo.body())
                             .textFieldStyle(.plain)
                         if !appState.searchText.isEmpty {
                             Button { appState.searchText = "" } label: {
                                 Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 11, weight: .semibold))
+                                    .font(.system(size: 12, weight: .semibold))
                                     .foregroundStyle(muted)
                                     .frame(width: 22, height: 22)
                                     .contentShape(Circle())
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(LCPressableButtonStyle())
                         }
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .liquidGlassSurface(radius: 8, tint: .clear)
+                    .padding(.horizontal, LCSpacing.sm)
+                    .frame(height: 36)
+                    .lcChip(tint: Color.white.opacity(0.05))
 
                     // Toggle offline lamps
                     Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
+                        withAnimation(LCAnimation.snap) {
                             appState.hideOfflineLamps.toggle()
                         }
                     } label: {
                         Image(systemName: appState.hideOfflineLamps ? "eye.slash.fill" : "eye.fill")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(appState.hideOfflineLamps ? accent : muted)
-                            .frame(width: 32, height: 32)
+                            .frame(width: 36, height: 36)
                     }
-                    .liquidGlassButtonStyle()
+                    .buttonStyle(LCGlassButtonStyle(prominent: appState.hideOfflineLamps, radius: 18))
                     .help(appState.hideOfflineLamps ? L10n.lampsShowAllHelp : L10n.lampsHideOfflineHelp)
                 }
-                .padding(.horizontal, 2)
             }
 
             if !appState.canSync {
@@ -70,25 +69,25 @@ struct LampsView: View {
             } else if appState.lamps.isEmpty && !appState.isAutoSyncing {
                 emptyStateCard
             } else if appState.visibleLamps.isEmpty && !appState.lamps.isEmpty {
-                HStack(spacing: 10) {
+                HStack(spacing: LCSpacing.sm) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(muted)
-                        .frame(width: 28, height: 28)
-                        .liquidGlassCircle()
+                        .frame(width: 32, height: 32)
+                        .lcCard(radius: 16, tint: Color.white.opacity(0.06))
                     VStack(alignment: .leading, spacing: 2) {
                         Text("lamps.filter.empty.title")
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(LCTypo.bodySemibold())
                             .foregroundStyle(ink)
                         Text(appState.hideOfflineLamps ? "lamps.filter.empty.offline" : "lamps.filter.empty.search")
-                            .font(.system(size: 11, weight: .medium))
+                            .font(LCTypo.micro())
                             .foregroundStyle(muted)
                     }
                     Spacer()
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
-                .liquidGlassSurface(radius: 16, tint: Color.blue.opacity(0.08))
+                .padding(.horizontal, LCSpacing.sm)
+                .padding(.vertical, LCSpacing.sm)
+                .lcCard(radius: LCRadius.card, tint: LCPalette.accent.opacity(0.08))
             }
 
             if appState.lamps.contains(where: { $0.capabilities.colorCode != nil }) {
@@ -108,23 +107,25 @@ struct LampsView: View {
                 ForEach(rooms) { room in
                     let roomLamps = appState.visibleLamps.filter { room.lampIds.contains($0.id) }
                     if !roomLamps.isEmpty {
-                        VStack(spacing: 6) {
-                            HStack(spacing: 8) {
+                        VStack(spacing: LCSpacing.xs) {
+                            HStack(spacing: LCSpacing.xs) {
                                 Button {
-                                    withAnimation(.spring(response: 0.30, dampingFraction: 0.85)) {
+                                    withAnimation(LCAnimation.snap) {
                                         if expandedRoomIds.contains(room.id) { expandedRoomIds.remove(room.id) } else { expandedRoomIds.insert(room.id) }
                                     }
                                 } label: {
                                     Image(systemName: expandedRoomIds.contains(room.id) ? "chevron.down" : "chevron.right")
-                                        .font(.system(size: 12, weight: .semibold))
+                                        .font(.system(size: 11, weight: .bold))
                                         .foregroundStyle(muted)
                                         .frame(width: 26, height: 26)
                                         .contentShape(Rectangle())
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(LCPressableButtonStyle())
 
-                                Text(room.name)
-                                    .font(.system(size: 12, weight: .semibold))
+                                Text(room.name.uppercased())
+                                    .font(LCTypo.sectionHeader())
+                                    .tracking(0.5)
+                                    .foregroundStyle(muted)
 
                                 Spacer()
 
@@ -132,23 +133,25 @@ struct LampsView: View {
                                     Task { await appState.setPowerForRoom(room.id, value: true) }
                                 } label: {
                                     Text(L10n.roomAllOn)
-                                        .font(.system(size: 11, weight: .semibold))
+                                        .font(LCTypo.microSemibold())
                                         .foregroundStyle(accent)
-                                        .padding(.horizontal, 10)
-                                        .frame(height: 24)
+                                        .padding(.horizontal, LCSpacing.sm)
+                                        .frame(height: 26)
                                 }
-                                .liquidGlassButtonStyle()
+                                .buttonStyle(LCPressableButtonStyle())
+                                .lcChip(tint: accent.opacity(0.18))
 
                                 Button {
                                     Task { await appState.setPowerForRoom(room.id, value: false) }
                                 } label: {
                                     Text(L10n.roomAllOff)
-                                        .font(.system(size: 11, weight: .semibold))
+                                        .font(LCTypo.microSemibold())
                                         .foregroundStyle(muted)
-                                        .padding(.horizontal, 10)
-                                        .frame(height: 24)
+                                        .padding(.horizontal, LCSpacing.sm)
+                                        .frame(height: 26)
                                 }
-                                .liquidGlassButtonStyle()
+                                .buttonStyle(LCPressableButtonStyle())
+                                .lcChip(tint: Color.white.opacity(0.06))
 
                                 Menu {
                                     ForEach(appState.userScenes) { scene in
@@ -164,8 +167,8 @@ struct LampsView: View {
                                 .menuStyle(BorderlessButtonMenuStyle())
                                 .menuIndicator(.hidden)
                             }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
+                            .padding(.horizontal, LCSpacing.xs)
+                            .padding(.vertical, LCSpacing.xxs)
 
                             if expandedRoomIds.contains(room.id) {
                                 ForEach(roomLamps) { lamp in
@@ -184,21 +187,25 @@ struct LampsView: View {
                                 }
                             }
                         }
-                        .liquidGlassSurface(radius: 12, tint: Color.white.opacity(0.02))
-                        .padding(.horizontal, 8)
+                        .padding(LCSpacing.xs)
+                        .lcCard(radius: LCRadius.panel, tint: Color.white.opacity(0.025))
                     }
                 }
 
                 // Unassigned lamps
                 let unassigned = appState.visibleLamps.filter { appState.roomForLamp($0.id) == nil }
                 if !unassigned.isEmpty {
-                    VStack(spacing: 6) {
-                        HStack(spacing: 8) {
-                            Text("Unassigned")
-                                .font(.system(size: 12, weight: .semibold))
+                    VStack(spacing: LCSpacing.xs) {
+                        HStack(spacing: LCSpacing.xs) {
+                            Text("lamps.unassigned")
+                                .font(LCTypo.sectionHeader())
+                                .tracking(0.5)
+                                .foregroundStyle(muted)
+                                .textCase(.uppercase)
                             Spacer()
                         }
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, LCSpacing.xs)
+                        .padding(.top, LCSpacing.xxs)
 
                         ForEach(unassigned) { lamp in
                             LampRow(lamp: lamp)
@@ -209,8 +216,8 @@ struct LampsView: View {
                                 }
                         }
                     }
-                    .liquidGlassSurface(radius: 12, tint: Color.white.opacity(0.02))
-                    .padding(.horizontal, 8)
+                    .padding(LCSpacing.xs)
+                    .lcCard(radius: LCRadius.panel, tint: Color.white.opacity(0.025))
                 }
             }
         }
@@ -223,88 +230,77 @@ struct LampsView: View {
 
     private var onboardingCard: some View {
         Button {
-            withAnimation(.spring(response: 0.30, dampingFraction: 0.88)) {
+            withAnimation(LCAnimation.snap) {
                 appState.selectedTab = .settings
             }
         } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(accent)
-                    .frame(width: 32, height: 32)
-                    .liquidGlassCircle()
+            HStack(spacing: LCSpacing.sm) {
+                LCIconBadge(systemName: "sparkles",
+                            size: 40,
+                            tint: .orange,
+                            fontSize: 16)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("lamps.welcome.title")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(LCTypo.bodySemibold())
                         .foregroundStyle(ink)
                     Text("lamps.welcome.subtitle")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(LCTypo.micro())
                         .foregroundStyle(muted)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
-                Spacer(minLength: 6)
+                Spacer(minLength: LCSpacing.xs)
 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(muted)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .liquidGlassSurface(radius: 16, tint: Color.orange.opacity(0.12), interactive: true)
+            .padding(LCSpacing.sm)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(LCPressableButtonStyle())
+        .lcCard(radius: LCRadius.card, tint: Color.orange.opacity(0.12))
+        .lcHoverable(glowTint: .orange, radius: LCRadius.card)
         .help("lamps.open.settings")
     }
 
     private var emptyStateCard: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "lightbulb.slash.fill")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(muted)
-                .frame(width: 28, height: 28)
-                .liquidGlassCircle()
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("lamps.empty.title")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(ink)
-                Text("lamps.empty.subtitle")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(muted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .liquidGlassSurface(radius: 16)
+        LCEmptyState(
+            icon: "lightbulb.slash",
+            title: "lamps.empty.title",
+            subtitle: "lamps.empty.subtitle"
+        )
     }
 
     private var statusBar: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: LCSpacing.sm) {
             Image(systemName: appState.isAutoSyncing ? "arrow.triangle.2.circlepath" : "bolt.horizontal.circle")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(muted)
+                .lcPulseSymbol(active: appState.isAutoSyncing)
 
             Text(syncLabel)
-                .font(.system(size: 12, weight: .medium))
+                .font(LCTypo.caption())
                 .foregroundStyle(muted)
                 .lineLimit(1)
 
-            Spacer(minLength: 4)
+            Spacer(minLength: LCSpacing.xxs)
 
             HStack(spacing: 6) {
                 Label("\(appState.visibleLamps.count)", systemImage: "lightbulb.2")
                     .font(.system(size: 11, weight: .semibold).monospacedDigit())
                     .foregroundStyle(ink)
 
-                Circle()
-                    .fill(appState.visibleLamps.filter(\.online).count > 0 ? Color.green.opacity(0.75) : Color.gray.opacity(0.40))
-                    .frame(width: 5, height: 5)
+                LCStatusDot(
+                    color: appState.visibleLamps.filter(\.online).count > 0 ? LCPalette.success : LCPalette.muted,
+                    animated: false
+                )
+                .frame(width: 8, height: 8)
 
                 Text(L10n.onlineLamps(appState.visibleLamps.filter(\.online).count))
-                    .font(.system(size: 11, weight: .medium))
+                    .font(LCTypo.micro())
                     .foregroundStyle(muted)
             }
 
@@ -314,29 +310,28 @@ struct LampsView: View {
                 } label: {
                     Image(systemName: appState.circadianSettings.isEnabled ? "sun.and.horizon.fill" : "sun.and.horizon")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(appState.circadianSettings.isEnabled ? Color.orange : muted.opacity(0.50))
-                        .frame(width: 28, height: 28)
-                        .liquidGlassSurface(radius: 10, tint: appState.circadianSettings.isEnabled ? Color.orange.opacity(0.15) : nil, interactive: true)
+                        .foregroundStyle(appState.circadianSettings.isEnabled ? Color.orange : muted.opacity(0.55))
+                        .frame(width: 30, height: 30)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(LCGlassButtonStyle(prominent: appState.circadianSettings.isEnabled, radius: 15))
                 .help(appState.circadianSettings.isEnabled ? "lamps.adaptive.disable" : "lamps.adaptive.enable")
             }
 
             Button { Task { await appState.syncLamps() } } label: {
-                Image(systemName: "arrow.clockwise.circle.fill")
+                Image(systemName: "arrow.clockwise")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(accent)
-                    .frame(width: 28, height: 28)
-                    .liquidGlassSurface(radius: 10, interactive: true)
+                    .frame(width: 30, height: 30)
+                    .lcPulseSymbol(active: appState.isAutoSyncing)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(LCGlassButtonStyle(prominent: false, radius: 15))
             .disabled(appState.isBusy || !appState.canSync)
             .opacity(appState.isBusy || !appState.canSync ? 0.45 : 1)
             .help("lamps.sync.now")
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 7)
-        .liquidGlassSurface(radius: 14)
+        .padding(.horizontal, LCSpacing.sm)
+        .padding(.vertical, LCSpacing.xs)
+        .lcCard(radius: LCRadius.card)
     }
 
     private var premiumLimitCard: some View {
@@ -823,27 +818,30 @@ private struct LampRow: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, showsAdvancedControls ? 10 : 8)
+        .padding(.horizontal, LCSpacing.sm)
+        .padding(.vertical, showsAdvancedControls ? LCSpacing.sm : LCSpacing.xs + 2)
         .background(alignment: .top) {
             if lamp.power {
                 Rectangle()
                     .fill(lamp.color.map { Color(hsv: $0) } ?? Color(red: 0.96, green: 0.77, blue: 0.26))
                     .frame(height: 2)
                     .clipShape(Capsule())
-                    .padding(.horizontal, 16)
+                    .shadow(color: (lamp.color.map { Color(hsv: $0) } ?? Color.orange).opacity(0.55), radius: 4, y: 0)
+                    .padding(.horizontal, LCSpacing.md)
             }
         }
-        .liquidGlassSurface(
-            radius: 17,
-            tint: lamp.power ? Color.white.opacity(0.10) : nil,
-            interactive: !showsAdvancedControls
-        )
+        .lcCard(radius: LCRadius.card, tint: lamp.power ? Color.white.opacity(0.10) : nil)
         .overlay(
-            RoundedRectangle(cornerRadius: 17, style: .continuous)
-                .strokeBorder(Color.white.opacity(appState.selectedLampIds.contains(lamp.id) ? 0.92 : 0.48), lineWidth: appState.selectedLampIds.contains(lamp.id) ? 1 : 0.65)
+            RoundedRectangle(cornerRadius: LCRadius.card, style: .continuous)
+                .strokeBorder(
+                    appState.selectedLampIds.contains(lamp.id)
+                        ? LCPalette.accent.opacity(0.85)
+                        : Color.clear,
+                    lineWidth: appState.selectedLampIds.contains(lamp.id) ? 1.5 : 0
+                )
         )
-        .animation(.spring(response: 0.28, dampingFraction: 0.86), value: showsAdvancedControls)
+        .lcHoverable(glowTint: lamp.power ? .yellow : LCPalette.accent, radius: LCRadius.card)
+        .animation(LCAnimation.standard, value: showsAdvancedControls)
     }
 
     private var showsAdvancedControls: Bool {
@@ -851,46 +849,53 @@ private struct LampRow: View {
     }
 
     private var rowSummary: some View {
-        HStack(spacing: 9) {
-            Image(systemName: lamp.power ? "lightbulb.fill" : "lightbulb")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(lamp.power ? Color(red: 0.96, green: 0.67, blue: 0.16) : muted.opacity(0.72))
-                .frame(width: 22)
+        HStack(spacing: LCSpacing.sm) {
+            ZStack {
+                Image(systemName: lamp.power ? "lightbulb.fill" : "lightbulb")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(lamp.power ? Color(red: 0.98, green: 0.72, blue: 0.20) : muted.opacity(0.70))
+                    .lcBounceSymbol(value: lamp.power)
+            }
+            .frame(width: 32, height: 32)
+            .lcCard(radius: 16, tint: lamp.power ? Color.yellow.opacity(0.18) : Color.white.opacity(0.05))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(lamp.name)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(LCTypo.bodySemibold())
                     .foregroundStyle(ink)
                     .lineLimit(1)
 
                 HStack(spacing: 5) {
-                    Circle()
-                        .fill(lamp.online ? (lamp.power ? Color.blue.opacity(0.68) : Color.gray.opacity(0.45)) : Color.red.opacity(0.55))
-                        .frame(width: 7, height: 7)
-                        .shadow(color: lamp.online && lamp.power ? Color.blue.opacity(0.55) : (lamp.online ? Color.clear : Color.red.opacity(0.40)), radius: 4)
+                    LCStatusDot(
+                        color: lamp.online
+                            ? (lamp.power ? Color.blue : LCPalette.muted)
+                            : LCPalette.danger,
+                        animated: false
+                    )
+                    .frame(width: 8, height: 8)
                     Text(compactStatus)
-                        .font(.system(size: 10, weight: .medium))
+                        .font(LCTypo.micro())
                         .foregroundStyle(muted)
                         .lineLimit(1)
                 }
             }
 
-            Spacer(minLength: 8)
+            Spacer(minLength: LCSpacing.xs)
 
             if let color = lamp.color, lamp.capabilities.colorCode != nil {
-                ColorSwatch(color: color, size: 18)
+                ColorSwatch(color: color, size: 20)
             }
 
             if let brightness = brightnessCapability {
                 Text("\(brightnessPercentage(for: brightness))%")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(muted)
-                    .frame(width: 32, alignment: .trailing)
+                    .font(.system(size: 13, weight: .semibold).monospacedDigit())
+                    .foregroundStyle(lamp.power ? ink : muted)
+                    .frame(width: 40, alignment: .trailing)
             } else if let temperature = temperatureCapability {
                 Text("\(temperaturePercentage(for: temperature))%")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(muted)
-                    .frame(width: 32, alignment: .trailing)
+                    .font(.system(size: 13, weight: .semibold).monospacedDigit())
+                    .foregroundStyle(lamp.power ? ink : muted)
+                    .frame(width: 40, alignment: .trailing)
             }
         }
         .frame(maxWidth: .infinity)

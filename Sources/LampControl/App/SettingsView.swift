@@ -68,34 +68,37 @@ struct SettingsView: View {
     }
 
     private var settingsNavigationBar: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: LCSpacing.sm) {
             if route != .overview {
                 Button {
-                    withAnimation(.spring(response: 0.30, dampingFraction: 0.88)) {
+                    withAnimation(LCAnimation.snap) {
                         route = .overview
                     }
                 } label: {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(accent)
-                        .frame(width: 34, height: 34)
+                        .frame(width: 32, height: 32)
                 }
-                .liquidGlassButtonStyle()
+                .buttonStyle(LCGlassButtonStyle(prominent: false, radius: 16))
                 .help("settings.back")
+                .transition(.move(edge: .leading).combined(with: .opacity))
             }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(route.title)
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(LCTypo.subtitle())
+                    .lcTrackedTitle()
                 Text(route.subtitle(appState: appState))
-                    .font(.system(size: 11, weight: .medium))
+                    .font(LCTypo.micro())
                     .foregroundStyle(muted)
                     .lineLimit(1)
             }
 
             Spacer()
         }
-        .frame(height: 42)
+        .frame(height: 44)
+        .animation(LCAnimation.snap, value: route)
     }
 
     private var overview: some View {
@@ -198,53 +201,57 @@ struct SettingsView: View {
                     tint: Color.gray.opacity(0.10)
                 )
             }
-            .padding(10)
-            .liquidGlassSurface(radius: 22)
+            .padding(LCSpacing.sm)
+            .lcCard(radius: LCRadius.panel)
         }
     }
 
     private var providersSettings: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: LCSpacing.xs) {
+            LCSectionHeader(title: "settings.providers.section")
             ForEach(LightProviderKind.allCases, id: \.self) { provider in
                 let isConfigured = appState.configuredProviderKinds.contains(provider)
                 providerRow(provider, isConfigured: isConfigured)
             }
         }
-        .padding(12)
-        .liquidGlassSurface(radius: 22)
+        .padding(LCSpacing.sm)
+        .lcCard(radius: LCRadius.panel)
     }
 
     private func providerRow(_ provider: LightProviderKind, isConfigured: Bool) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: providerIcon(provider))
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(isConfigured ? Color.green.opacity(0.85) : (provider.isImplemented ? accent : muted))
-                .frame(width: 30, height: 30)
-                .liquidGlassSurface(radius: 11, tint: isConfigured ? Color.green.opacity(0.10) : nil)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(provider.title)
-                    .font(.system(size: 12, weight: .semibold))
-                Text(providerSubtitle(provider, isConfigured: isConfigured))
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(muted)
-            }
-
-            Spacer()
-
-            Button {
+        Button {
+            withAnimation(LCAnimation.snap) {
                 route = route(for: provider)
-            } label: {
+            }
+        } label: {
+            HStack(spacing: LCSpacing.sm) {
+                Image(systemName: providerIcon(provider))
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(isConfigured ? Color.green.opacity(0.85) : (provider.isImplemented ? accent : muted))
+                    .frame(width: 34, height: 34)
+                    .lcCard(radius: 17, tint: isConfigured ? Color.green.opacity(0.15) : nil)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(provider.title)
+                        .font(LCTypo.bodySemibold())
+                    Text(providerSubtitle(provider, isConfigured: isConfigured))
+                        .font(LCTypo.micro())
+                        .foregroundStyle(muted)
+                }
+
+                Spacer()
+
                 Image(systemName: "chevron.right")
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(accent)
-                    .frame(width: 28, height: 28)
             }
-            .liquidGlassButtonStyle()
+            .padding(.horizontal, LCSpacing.sm)
+            .padding(.vertical, LCSpacing.xs)
+            .contentShape(Rectangle())
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .liquidGlassSurface(radius: 16, interactive: true)
+        .buttonStyle(LCPressableButtonStyle())
+        .lcCard(radius: LCRadius.card, tint: Color.white.opacity(0.03))
+        .lcHoverable(glowTint: accent, radius: LCRadius.card)
     }
 
     private func providerIcon(_ provider: LightProviderKind) -> String {
@@ -1250,23 +1257,23 @@ struct SettingsView: View {
 
     private func settingsLink(_ route: SettingsRoute, icon: String, title: String, subtitle: String, tint: Color) -> some View {
         Button {
-            withAnimation(.spring(response: 0.30, dampingFraction: 0.88)) {
+            withAnimation(LCAnimation.snap) {
                 self.route = route
             }
         } label: {
-            HStack(spacing: 11) {
+            HStack(spacing: LCSpacing.sm) {
                 Image(systemName: icon)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(accent)
-                    .frame(width: 34, height: 34)
-                    .liquidGlassSurface(radius: 12, tint: tint)
+                    .frame(width: 36, height: 36)
+                    .lcCard(radius: 18, tint: tint)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(LCTypo.bodySemibold())
                         .foregroundStyle(ink)
                     Text(subtitle)
-                        .font(.system(size: 11, weight: .medium))
+                        .font(LCTypo.micro())
                         .foregroundStyle(muted)
                         .lineLimit(1)
                 }
@@ -1277,11 +1284,13 @@ struct SettingsView: View {
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(muted)
             }
-            .padding(.horizontal, 12)
-            .frame(height: 58)
-            .liquidGlassSurface(radius: 16, tint: Color.white.opacity(0.04), interactive: true)
+            .padding(.horizontal, LCSpacing.sm)
+            .frame(height: 60)
+            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(LCPressableButtonStyle())
+        .lcCard(radius: LCRadius.card, tint: Color.white.opacity(0.04))
+        .lcHoverable(glowTint: accent, radius: LCRadius.card)
     }
 
     private var tuyaSettings: some View {

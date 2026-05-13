@@ -2,172 +2,180 @@ import SwiftUI
 
 struct ControlCenterView: View {
     @EnvironmentObject private var appState: AppState
-
-    private let ink = LCTheme.ink
-    private let muted = LCTheme.muted
-    private let accent = LCTheme.accent
+    @Namespace private var tabNamespace
 
     var body: some View {
         ZStack {
-            background
+            LCBackdrop()
 
-            if #available(macOS 26.0, *) {
-                GlassEffectContainer(spacing: 16) {
-                    content
-                }
-            } else {
-                content
-            }
+            content
+                .lcGlassGroup(spacing: LCSpacing.sm)
 
             if appState.isOnboardingPresented {
                 OnboardingOverlay()
-                    .transition(.opacity)
+                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
                     .zIndex(10)
             }
         }
         .frame(width: appState.preferredPopoverSize.width, height: appState.preferredPopoverSize.height)
-        .foregroundStyle(ink)
+        .foregroundStyle(LCPalette.ink)
+        .animation(LCAnimation.standard, value: appState.isOnboardingPresented)
     }
+
+    // MARK: - Layout
 
     private var content: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: LCSpacing.sm) {
             header
-            tabs
+                .padding(.horizontal, LCSpacing.lg)
+                .padding(.top, LCSpacing.md)
+
+            tabStrip
+                .padding(.horizontal, LCSpacing.lg)
 
             if !appState.message.isEmpty {
-                messageView
+                messageBanner
+                    .padding(.horizontal, LCSpacing.lg)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
 
-            switch appState.selectedTab {
-            case .lamps:
-                LampsView()
-            case .settings:
-                SettingsView()
-            }
-        }
-        .padding(16)
-    }
-
-    private var background: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    LCTheme.backgroundTop,
-                    LCTheme.backgroundMiddle,
-                    LCTheme.backgroundBottom
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-
-            LinearGradient(
-                colors: [
-                    LCTheme.glassHighlight,
-                    Color.clear,
-                    LCTheme.backgroundShade
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-
-            LinearGradient(
-                colors: [
-                    LCTheme.sideHighlight,
-                    Color.clear
-                ],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-
-            Rectangle()
-                .fill(Color(nsColor: .windowBackgroundColor).opacity(0.18))
-        }
-        .ignoresSafeArea()
-    }
-
-    private var header: some View {
-        HStack(spacing: 12) {
-            ZStack {
-                Image(systemName: "lightbulb.led")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(accent)
-            }
-            .frame(width: 42, height: 42)
-            .liquidGlassSurface(radius: 16)
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text("LampControl")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(ink)
-                HStack(spacing: 6) {
-                    ZStack {
-                        Circle()
-                            .fill(appState.canSync ? Color.blue.opacity(0.70) : Color.gray.opacity(0.45))
-                            .frame(width: 6, height: 6)
-                        if appState.canSync {
-                            Circle()
-                                .stroke(Color.blue.opacity(0.40), lineWidth: 1.5)
-                                .frame(width: 6, height: 6)
-                                .scaleEffect(appState.isAutoSyncing ? 2.0 : 1.0)
-                                .opacity(appState.isAutoSyncing ? 0 : 0.6)
-                                .animation(appState.isAutoSyncing ? .easeOut(duration: 1.0).repeatForever(autoreverses: false) : .default, value: appState.isAutoSyncing)
-                        }
-                    }
-                    Text(appState.canSync ? "cloud.active" : "config.required")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(muted)
+            Group {
+                switch appState.selectedTab {
+                case .lamps:
+                    LampsView()
+                        .transition(.opacity.combined(with: .move(edge: .leading)))
+                case .settings:
+                    SettingsView()
+                        .transition(.opacity.combined(with: .move(edge: .trailing)))
                 }
             }
-            Spacer()
-
-            Button(action: appState.quit) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(muted)
-                    .frame(width: 34, height: 34)
-            }
-            .liquidGlassButtonStyle()
-            .help("app.quit")
+            .padding(.horizontal, LCSpacing.md)
+            .padding(.bottom, LCSpacing.md)
+            .animation(LCAnimation.standard, value: appState.selectedTab)
         }
     }
 
-    private var tabs: some View {
-        HStack(spacing: 6) {
+    // MARK: - Header
+
+    private var header: some View {
+        HStack(spacing: LCSpacing.sm) {
+            LCIconBadge(systemName: "lightbulb.led",
+                        size: 36,
+                        tint: LCPalette.accent,
+                        fontSize: 16)
+                .lcHoverable(glowTint: LCPalette.accent, radius: 18)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("LampControl")
+                    .font(LCTypo.title())
+                    .lcTrackedTitle()
+                    .foregroundStyle(LCPalette.ink)
+
+                HStack(spacing: LCSpacing.xxs) {
+                    LCStatusDot(color: appState.canSync ? Color.blue : LCPalette.muted,
+                                animated: appState.isAutoSyncing)
+                    Text(headerStatusKey)
+                        .font(LCTypo.micro())
+                        .foregroundStyle(LCPalette.muted)
+                }
+            }
+
+            Spacer(minLength: LCSpacing.xs)
+
+            circleIconButton(icon: "gearshape", help: "settings.title") {
+                withAnimation(LCAnimation.snap) {
+                    appState.selectedTab = .settings
+                }
+            }
+
+            circleIconButton(icon: "xmark", help: "app.quit", action: appState.quit)
+        }
+        .frame(height: 56)
+    }
+
+    private func circleIconButton(icon: String,
+                                  help: LocalizedStringKey,
+                                  action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(LCPalette.muted)
+                .frame(width: 32, height: 32)
+        }
+        .buttonStyle(LCGlassButtonStyle(prominent: false, radius: 16))
+        .help(help)
+    }
+
+    // MARK: - Tab strip
+
+    private var tabStrip: some View {
+        HStack(spacing: 0) {
             tabButton(.lamps, title: "tab.lamps", icon: "slider.horizontal.3")
             tabButton(.settings, title: "tab.settings", icon: "gearshape")
         }
-        .padding(4)
-        .liquidGlassSurface(radius: 18)
+        .padding(LCSpacing.xxs)
+        .lcCard(radius: 22, tint: Color.white.opacity(0.04))
+        .frame(height: 44)
     }
 
-    private func tabButton(_ tab: ControlTab, title: LocalizedStringKey, icon: String) -> some View {
+    private func tabButton(_ tab: ControlTab,
+                           title: LocalizedStringKey,
+                           icon: String) -> some View {
         let isActive = appState.selectedTab == tab
 
         return Button {
-            withAnimation(.spring(response: 0.30, dampingFraction: 0.88)) {
+            withAnimation(LCAnimation.snap) {
                 appState.selectedTab = tab
             }
         } label: {
-            Label(title, systemImage: icon)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(isActive ? Color.white : muted)
-                .frame(maxWidth: .infinity)
-                .frame(height: 34)
-                .liquidGlassSurface(
-                    radius: 16,
-                    tint: isActive ? accent.opacity(0.58) : Color.clear,
-                    interactive: true
-                )
-                .overlay(alignment: .bottom) {
-                    if isActive {
-                        Capsule()
-                            .fill(accent.opacity(0.85))
-                            .frame(width: 28, height: 2)
-                            .padding(.bottom, 5)
-                    }
+            ZStack {
+                if isActive {
+                    Capsule(style: .continuous)
+                        .fill(LCPalette.accent.opacity(0.95))
+                        .matchedGeometryEffect(id: "tab.indicator", in: tabNamespace)
+                        .shadow(color: LCPalette.accent.opacity(0.35), radius: 8, y: 2)
                 }
+
+                HStack(spacing: 6) {
+                    Image(systemName: icon)
+                        .font(.system(size: 12, weight: .semibold))
+                    Text(title)
+                        .font(LCTypo.bodySemibold())
+                }
+                .foregroundStyle(isActive ? Color.white : LCPalette.muted)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 36)
+            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(LCPressableButtonStyle())
+    }
+
+    // MARK: - Message banner
+
+    private var messageBanner: some View {
+        HStack(spacing: LCSpacing.xs) {
+            Image(systemName: isErrorMessage ? "exclamationmark.circle.fill" : "info.circle.fill")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(isErrorMessage ? LCPalette.danger : LCPalette.accent)
+            Text(appState.message)
+                .font(LCTypo.caption())
+                .foregroundStyle(LCPalette.ink)
+                .lineLimit(2)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, LCSpacing.sm)
+        .padding(.vertical, LCSpacing.xs + 2)
+        .lcCard(radius: LCRadius.button,
+                tint: isErrorMessage
+                    ? LCPalette.danger.opacity(0.12)
+                    : LCPalette.accent.opacity(0.10))
+    }
+
+    // MARK: - Derived
+
+    private var headerStatusKey: LocalizedStringKey {
+        appState.canSync ? "cloud.active" : "config.required"
     }
 
     private var isErrorMessage: Bool {
@@ -175,40 +183,20 @@ struct ControlCenterView: View {
         return lowered.contains("error") || lowered.contains("erreur") ||
                lowered.contains("impossible") || lowered.contains("failed") ||
                lowered.contains("invalide") || lowered.contains("invalid") ||
-               lowered.contains("échec") || lowered.contains("failed")
+               lowered.contains("échec")
     }
-
-    private var messageView: some View {
-        HStack(spacing: 8) {
-            if isErrorMessage {
-                Image(systemName: "exclamationmark.circle.fill")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(LCTheme.error)
-            } else {
-                Image(systemName: "info.circle")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(accent)
-            }
-            Text(appState.message)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(ink)
-                .lineLimit(2)
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9)
-        .liquidGlassSurface(radius: 15, tint: isErrorMessage ? LCTheme.errorSurface : LCTheme.infoSurface)
-    }
-
 }
+
+// MARK: - Backwards-compatible LCTheme + liquidGlass helpers
+//
+// Existing LampsView / SettingsView / OnboardingOverlay still use these
+// surfaces extensively. We keep them — they now layer on top of the
+// new DesignSystem visuals and continue to work the same way.
 
 extension View {
     /// Apply a Liquid Glass surface.
     /// - On macOS 26+ uses the real `.glassEffect` API.
     /// - On macOS 13–25 falls back to a layered translucent material.
-    /// When `interactive: true` the call also sets a `.contentShape` matching the
-    /// glass shape so the whole visible surface is hit-testable (fixes Buttons
-    /// whose tappable area was previously limited to the inner Label).
     @ViewBuilder
     func liquidGlassSurface(radius: CGFloat, tint: Color? = nil, interactive: Bool = false) -> some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
@@ -223,8 +211,6 @@ extension View {
         }
     }
 
-    /// Circular variant. Always sets a circular content shape so circular
-    /// glass buttons accept clicks across their full visible area.
     @ViewBuilder
     func liquidGlassCircle(tint: Color? = nil, interactive: Bool = false) -> some View {
         if #available(macOS 26.0, *) {
@@ -291,9 +277,6 @@ extension View {
             )
     }
 
-    /// Style a Button with a Liquid Glass background that fills the whole
-    /// label area. Forces `.plain` style so the surface is the button, and
-    /// expands the hit-target to the full visible rounded rect.
     @ViewBuilder
     func liquidGlassButtonStyle(prominent: Bool = false) -> some View {
         self
@@ -313,8 +296,6 @@ private struct NativeGlassEffectModifier<S: Shape>: ViewModifier {
     let interactive: Bool
 
     func body(content: Content) -> some View {
-        // The macOS 26 Liquid Glass API. We branch on tint/interactive so
-        // optional decorations are added only when requested.
         if let tint, interactive {
             content.glassEffect(.regular.tint(tint).interactive(), in: shape)
         } else if let tint {

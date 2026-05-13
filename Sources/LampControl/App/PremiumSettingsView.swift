@@ -8,8 +8,8 @@ struct PremiumSettingsView: View {
     @State private var showingActivationForm = false
 
     var body: some View {
-        VStack(spacing: 12) {
-            VStack(spacing: 12) {
+        VStack(spacing: LCSpacing.sm) {
+            VStack(spacing: LCSpacing.sm) {
                 header
                 infoRow("premium.lamps",
                         value: licenseState.entitlements.maxLamps.map { "\($0) max" } ?? NSLocalizedString("premium.lamps.unlimited", comment: ""),
@@ -18,8 +18,8 @@ struct PremiumSettingsView: View {
                 premiumFeatureRow("premium.custom.scenes", isEnabled: licenseState.entitlements.canUseCustomScenes)
                 premiumFeatureRow("premium.quick.ambiances", isEnabled: licenseState.entitlements.canUseScenePresets)
             }
-            .padding(14)
-            .liquidGlassSurface(radius: 22)
+            .padding(LCSpacing.md)
+            .lcCard(radius: LCRadius.panel)
 
             activationCard
 
@@ -28,27 +28,24 @@ struct PremiumSettingsView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 11) {
-            Image(systemName: "crown.fill")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Color.yellow)
-                .frame(width: 34, height: 34)
-                .liquidGlassSurface(radius: 12, tint: Color.yellow.opacity(0.12))
+        HStack(spacing: LCSpacing.sm) {
+            LCIconBadge(systemName: "crown.fill", size: 40, tint: .yellow, fontSize: 16)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(licenseState.tier.title)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(LCTypo.subtitle())
+                    .lcTrackedTitle()
                 Text(licenseState.statusText)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(LCTheme.muted)
+                    .font(LCTypo.micro())
+                    .foregroundStyle(LCPalette.muted)
             }
 
             Spacer()
 
             if licenseState.tier == .premium {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Color.green)
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(LCPalette.success)
             }
         }
     }
@@ -157,8 +154,8 @@ struct PremiumSettingsView: View {
                 }
             }
         }
-        .padding(14)
-        .liquidGlassSurface(radius: 22)
+        .padding(LCSpacing.md)
+        .lcCard(radius: LCRadius.panel)
     }
 
     private var earlyAccessNote: some View {

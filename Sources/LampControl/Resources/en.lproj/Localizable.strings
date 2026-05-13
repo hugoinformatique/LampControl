@@ -63,6 +63,7 @@
 "onboarding.step2.detail" = "The Secret stays stored in the Keychain.";
 "onboarding.step3.title" = "Test the sync";
 "onboarding.step3.detail" = "LampControl then detects compatible lamps.";
+"onboarding.next" = "Next";
 "onboarding.configure" = "Configure";
 "onboarding.guide" = "Open guide";
 "onboarding.dismiss" = "Dismiss";
@@ -88,6 +89,7 @@
 
 /* Settings navigation */
 "settings.back" = "Back";
+"settings.providers.section" = "Providers";
 "route.settings.sub.active" = "Active configuration";
 "route.settings.sub.required" = "Setup required";
 "route.providers.subtitle" = "Tuya, Hue, LIFX, Govee, Yeelight, Nanoleaf, WiZ";
@@ -256,6 +258,7 @@
 
 /* Lamps */
 "lamps.search.placeholder" = "Search lamps";
+"lamps.unassigned" = "Unassigned";
 "lamps.filter.empty.title" = "No lamps found";
 "lamps.filter.empty.search" = "Try a different search";
 "lamps.filter.empty.offline" = "All lamps are offline";
