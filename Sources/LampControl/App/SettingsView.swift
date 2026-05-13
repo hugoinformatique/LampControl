@@ -862,6 +862,8 @@ struct SettingsView: View {
                                 Image(systemName: "plus.circle.fill")
                                     .font(.system(size: 13, weight: .semibold))
                                     .foregroundStyle(accent)
+                                    .frame(width: 26, height: 26)
+                                    .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
                         }
@@ -918,9 +920,10 @@ struct SettingsView: View {
                                             .font(.system(size: 12, weight: .semibold))
                                             .foregroundStyle(accent)
                                             .frame(width: 28, height: 28)
+                                            .contentShape(Rectangle())
                                     }
                                     .buttonStyle(.plain)
-                                    
+
                                     Button {
                                         appState.removeFocusMapping(mapping.id)
                                     } label: {
@@ -928,6 +931,7 @@ struct SettingsView: View {
                                             .font(.system(size: 12, weight: .semibold))
                                             .foregroundStyle(Color.red)
                                             .frame(width: 28, height: 28)
+                                            .contentShape(Rectangle())
                                     }
                                     .buttonStyle(.plain)
                                 }
@@ -1436,6 +1440,8 @@ struct SettingsView: View {
                                 Image(systemName: "plus.circle.fill")
                                     .font(.system(size: 13, weight: .semibold))
                                     .foregroundStyle(accent)
+                                    .frame(width: 26, height: 26)
+                                    .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
                         }
@@ -1447,7 +1453,7 @@ struct SettingsView: View {
                                     .font(.system(size: 12, weight: .semibold))
                                     .foregroundStyle(accent)
                                     .frame(width: 20, height: 20)
-                                
+
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(room.name)
                                         .font(.system(size: 11, weight: .semibold))
@@ -1455,9 +1461,9 @@ struct SettingsView: View {
                                         .font(.system(size: 9, weight: .medium))
                                         .foregroundStyle(muted)
                                 }
-                                
+
                                 Spacer()
-                                
+
                                 Button {
                                     editingRoomId = room.id
                                     newRoomName = room.name
@@ -1466,9 +1472,10 @@ struct SettingsView: View {
                                         .font(.system(size: 12, weight: .semibold))
                                         .foregroundStyle(accent)
                                         .frame(width: 28, height: 28)
+                                        .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
-                                
+
                                 Button {
                                     var updated = room
                                     updated.lampIds = []
@@ -1481,6 +1488,7 @@ struct SettingsView: View {
                                         .font(.system(size: 12, weight: .semibold))
                                         .foregroundStyle(Color.red)
                                         .frame(width: 28, height: 28)
+                                        .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
                             }

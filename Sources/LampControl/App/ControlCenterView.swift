@@ -203,18 +203,45 @@ struct ControlCenterView: View {
 }
 
 extension View {
+    /// Apply a Liquid Glass surface.
+    /// - On macOS 26+ uses the real `.glassEffect` API.
+    /// - On macOS 13–25 falls back to a layered translucent material.
+    /// When `interactive: true` the call also sets a `.contentShape` matching the
+    /// glass shape so the whole visible surface is hit-testable (fixes Buttons
+    /// whose tappable area was previously limited to the inner Label).
     @ViewBuilder
     func liquidGlassSurface(radius: CGFloat, tint: Color? = nil, interactive: Bool = false) -> some View {
-        self.fallbackGlassSurface(radius: radius, tint: tint)
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        if #available(macOS 26.0, *) {
+            self
+                .modifier(NativeGlassEffectModifier(shape: shape, tint: tint, interactive: interactive))
+                .contentShape(shape)
+        } else {
+            self
+                .fallbackGlassSurface(radius: radius, tint: tint)
+                .contentShape(shape)
+        }
     }
 
+    /// Circular variant. Always sets a circular content shape so circular
+    /// glass buttons accept clicks across their full visible area.
     @ViewBuilder
     func liquidGlassCircle(tint: Color? = nil, interactive: Bool = false) -> some View {
-        self.fallbackGlassSurface(radius: 999, tint: tint)
+        if #available(macOS 26.0, *) {
+            self
+                .modifier(NativeGlassEffectModifier(shape: Circle(), tint: tint, interactive: interactive))
+                .contentShape(Circle())
+        } else {
+            self
+                .fallbackGlassSurface(radius: 999, tint: tint)
+                .contentShape(Circle())
+        }
     }
 
-    private func fallbackGlassSurface(radius: CGFloat, tint: Color?) -> some View {
-        self
+    fileprivate func fallbackGlassSurface(radius: CGFloat, tint: Color?) -> some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        return self
+            .background(.ultraThinMaterial, in: shape)
             .background(
                 LinearGradient(
                     colors: [
@@ -225,25 +252,78 @@ extension View {
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ),
-                in: RoundedRectangle(cornerRadius: radius, style: .continuous)
+                in: shape
+            )
+            .background(
+                Group {
+                    if let tint {
+                        shape.fill(tint)
+                    } else {
+                        Color.clear
+                    }
+                }
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.18), Color.clear],
+                            startPoint: .top,
+                            endPoint: .center
+                        )
+                    )
+                    .allowsHitTesting(false)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
                     .strokeBorder(
-                        LCTheme.strokeMiddle,
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.35),
+                                LCTheme.strokeMiddle,
+                                Color.white.opacity(0.05)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
                         lineWidth: 0.8
                     )
             )
     }
 
+    /// Style a Button with a Liquid Glass background that fills the whole
+    /// label area. Forces `.plain` style so the surface is the button, and
+    /// expands the hit-target to the full visible rounded rect.
     @ViewBuilder
     func liquidGlassButtonStyle(prominent: Bool = false) -> some View {
         self
             .buttonStyle(.plain)
-            .fallbackGlassSurface(
+            .liquidGlassSurface(
                 radius: prominent ? 18 : 13,
-                tint: prominent ? LCTheme.accent.opacity(0.35) : Color.white.opacity(0.08)
+                tint: prominent ? LCTheme.accent.opacity(0.35) : Color.white.opacity(0.08),
+                interactive: true
             )
+    }
+}
+
+@available(macOS 26.0, *)
+private struct NativeGlassEffectModifier<S: Shape>: ViewModifier {
+    let shape: S
+    let tint: Color?
+    let interactive: Bool
+
+    func body(content: Content) -> some View {
+        // The macOS 26 Liquid Glass API. We branch on tint/interactive so
+        // optional decorations are added only when requested.
+        if let tint, interactive {
+            content.glassEffect(.regular.tint(tint).interactive(), in: shape)
+        } else if let tint {
+            content.glassEffect(.regular.tint(tint), in: shape)
+        } else if interactive {
+            content.glassEffect(.regular.interactive(), in: shape)
+        } else {
+            content.glassEffect(.regular, in: shape)
+        }
     }
 }
 

@@ -8,6 +8,37 @@ All notable changes to LampControl are documented here. The format follows
 
 ### Planned
 
+## [1.3.1] - 2026-05-13
+
+### Fixed
+
+- **Global keyboard shortcuts now work when the app is in background.**
+  Replaced `NSEvent.addGlobalMonitorForEvents` (which silently required the
+  Accessibility permission and never fired without it) with the Carbon
+  `RegisterEventHotKey` API. Shortcuts like ⌥1, ⌥2, ⌥0 now trigger their
+  scene/power actions instantly from any application, no permission prompt
+  required.
+- **Click targets across the popover.** Numerous icon-only buttons (tab
+  switcher, room expand/collapse, "All On"/"All Off", scene palette, color
+  swatches, edit/trash icons in Settings, search-bar clear) had hit-areas
+  limited to the inner glyph. Added `.contentShape(...)` with expanded
+  frames so the entire visible surface is now clickable.
+
+### Changed
+
+- **Liquid Glass design pass.** `ControlCenterView` now applies the native
+  `.glassEffect(.regular)` API on macOS 26+ (with `tint` and `interactive`
+  variants) and a richer layered fallback on macOS 13–25 combining
+  `.ultraThinMaterial`, gradient tint layer, top highlight overlay, and
+  luminous gradient stroke border.
+- `GlobalShortcutService` is now `@MainActor`-isolated to prevent any
+  future thread-safety issues.
+
+### Removed
+
+- `NSAccessibilityUsageDescription` from `Info.plist` — no longer needed
+  since shortcuts use Carbon (which does not require Accessibility).
+
 ## [1.1.0] - 2026-05-02
 
 ### Added

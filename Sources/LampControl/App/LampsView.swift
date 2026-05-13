@@ -38,6 +38,8 @@ struct LampsView: View {
                                 Image(systemName: "xmark.circle.fill")
                                     .font(.system(size: 11, weight: .semibold))
                                     .foregroundStyle(muted)
+                                    .frame(width: 22, height: 22)
+                                    .contentShape(Circle())
                             }
                             .buttonStyle(.plain)
                         }
@@ -109,10 +111,15 @@ struct LampsView: View {
                         VStack(spacing: 6) {
                             HStack(spacing: 8) {
                                 Button {
-                                    if expandedRoomIds.contains(room.id) { expandedRoomIds.remove(room.id) } else { expandedRoomIds.insert(room.id) }
+                                    withAnimation(.spring(response: 0.30, dampingFraction: 0.85)) {
+                                        if expandedRoomIds.contains(room.id) { expandedRoomIds.remove(room.id) } else { expandedRoomIds.insert(room.id) }
+                                    }
                                 } label: {
                                     Image(systemName: expandedRoomIds.contains(room.id) ? "chevron.down" : "chevron.right")
                                         .font(.system(size: 12, weight: .semibold))
+                                        .foregroundStyle(muted)
+                                        .frame(width: 26, height: 26)
+                                        .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
 
@@ -121,15 +128,27 @@ struct LampsView: View {
 
                                 Spacer()
 
-                                Button(L10n.roomAllOn) {
+                                Button {
                                     Task { await appState.setPowerForRoom(room.id, value: true) }
+                                } label: {
+                                    Text(L10n.roomAllOn)
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundStyle(accent)
+                                        .padding(.horizontal, 10)
+                                        .frame(height: 24)
                                 }
-                                .buttonStyle(.plain)
+                                .liquidGlassButtonStyle()
 
-                                Button(L10n.roomAllOff) {
+                                Button {
                                     Task { await appState.setPowerForRoom(room.id, value: false) }
+                                } label: {
+                                    Text(L10n.roomAllOff)
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundStyle(muted)
+                                        .padding(.horizontal, 10)
+                                        .frame(height: 24)
                                 }
-                                .buttonStyle(.plain)
+                                .liquidGlassButtonStyle()
 
                                 Menu {
                                     ForEach(appState.userScenes) { scene in
@@ -137,10 +156,16 @@ struct LampsView: View {
                                     }
                                 } label: {
                                     Image(systemName: "paintpalette")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundStyle(accent)
+                                        .frame(width: 26, height: 26)
+                                        .contentShape(Rectangle())
                                 }
                                 .menuStyle(BorderlessButtonMenuStyle())
+                                .menuIndicator(.hidden)
                             }
                             .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
 
                             if expandedRoomIds.contains(room.id) {
                                 ForEach(roomLamps) { lamp in
@@ -975,6 +1000,8 @@ private struct LampRow: View {
                                     .frame(width: 16, height: 16)
                                     .overlay(Circle().stroke(Color.white.opacity(0.72), lineWidth: 0.8))
                                     .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 1)
+                                    .frame(width: 24, height: 24)
+                                    .contentShape(Circle())
                             }
                             .buttonStyle(.plain)
                             .disabled(!lamp.online)
