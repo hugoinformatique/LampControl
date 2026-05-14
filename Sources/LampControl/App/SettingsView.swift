@@ -251,7 +251,6 @@ struct SettingsView: View {
         }
         .buttonStyle(LCPressableButtonStyle())
         .lcCard(radius: LCRadius.card, tint: Color.white.opacity(0.03))
-        .lcHoverable(glowTint: accent, radius: LCRadius.card)
     }
 
     private func providerIcon(_ provider: LightProviderKind) -> String {
@@ -1290,7 +1289,6 @@ struct SettingsView: View {
         }
         .buttonStyle(LCPressableButtonStyle())
         .lcCard(radius: LCRadius.card, tint: Color.white.opacity(0.04))
-        .lcHoverable(glowTint: accent, radius: LCRadius.card)
     }
 
     private var tuyaSettings: some View {

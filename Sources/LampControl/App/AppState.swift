@@ -586,40 +586,51 @@ final class AppState: ObservableObject {
     private var preferredPopoverHeight: CGFloat {
         let height: CGFloat
         switch selectedTab {
-        case .settings: height = 740
+        case .settings: height = 720
+        // LampsView wraps its body in a ScrollView; the popover is sized to
+        // a content-aware target capped at 620pt. Anything beyond scrolls
+        // (rooms, expanded rows, scene editor).
         case .lamps:    height = lampsPopoverHeight
         }
         let screenMax = (NSScreen.main?.visibleFrame.height ?? 900) - 80
-        return min(max(height, 300), screenMax)
+        return min(max(height, 360), screenMax)
     }
 
     private var lampsPopoverHeight: CGFloat {
-        // Outer VStack padding (16 top + 16 bottom)
-        var h: CGFloat = 32
-        // Header + spacing + tabs
-        h += 42 + 12 + 42
-        // spacing + message
-        if !message.isEmpty { h += 12 + 46 }
-        // spacing + statusBar (compact single row: ~42px)
-        h += 8 + 42
-        // onboarding / empty card
-        if !canSync || (lamps.isEmpty && !isAutoSyncing) { h += 8 + 46 }
-        // ScenePresetBar: chips 52px + padding(10) top+bottom = 72
+        // Quiet Glass redesign metrics (real measured heights):
+        // header 56 + tabStrip 44 + outer paddings 28 = ~128pt fixed chrome
+        var h: CGFloat = 128
+
+        if !message.isEmpty { h += 56 }
+
+        // status bar card (~56pt)
+        h += 56 + 12
+
+        // No providers configured → just show onboarding card.
+        if !canSync {
+            return min(h + 220, 540)
+        }
+
+        // search + offline toggle row
+        if !lamps.isEmpty { h += 44 }
+
+        // empty/filter empty state card
+        if lamps.isEmpty && !isAutoSyncing { return min(h + 200, 540) }
+
         if lamps.contains(where: { $0.capabilities.colorCode != nil }) {
-            h += 8 + 72
-            h += 8 + (isGroupPanelExpanded || selectedLampIds.count >= 2 ? 212 : 50)
+            h += 84   // ScenePresetBar
+            h += isGroupPanelExpanded || selectedLampIds.count >= 2 ? 220 : 60
         }
-        // premium limit card
-        if hiddenLampCount > 0 { h += 8 + 46 }
-        // lamp rows
-        if !visibleLamps.isEmpty { h += 8 }
-        for lamp in visibleLamps {
-            h += expandedLampIds.contains(lamp.id) ? expandedLampRowHeight(for: lamp) : 48
-        }
-        h += CGFloat(max(0, visibleLamps.count - 1)) * 8
-        // bottom inner spacing
-        h += 16
-        return h
+        if hiddenLampCount > 0 { h += 56 }
+
+        // Reserve room for ~3 lamp rows + their room headers; ScrollView absorbs the rest.
+        let visibleCount = max(1, min(visibleLamps.count, 3))
+        h += CGFloat(visibleCount) * 72
+
+        let roomsWithLamps = rooms.filter { room in visibleLamps.contains(where: { room.lampIds.contains($0.id) }) }.count
+        h += CGFloat(min(roomsWithLamps, 2)) * 48
+
+        return min(h, 620)
     }
 
     private func expandedLampRowHeight(for lamp: LampDevice) -> CGFloat {

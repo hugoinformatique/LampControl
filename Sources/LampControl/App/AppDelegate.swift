@@ -28,8 +28,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         popover.delegate = self
         popover.contentViewController = NSHostingController(rootView: ControlCenterView().environmentObject(appState))
 
-        appState.objectWillChange
-            .debounce(for: .milliseconds(180), scheduler: RunLoop.main)
+        // PERF: previously we re-ran `updatePopoverSize` on every `objectWillChange`
+        // (debounced 180ms). On a live system with sync polling this triggers a
+        // continuous resize/layout loop in SwiftUI — main cause of the 3 FPS popover.
+        // We now resize only on key layout-affecting events.
+        Publishers.MergeMany(
+            appState.$selectedTab.map { _ in () }.eraseToAnyPublisher(),
+            appState.$expandedLampIds.map { _ in () }.eraseToAnyPublisher(),
+            appState.$isGroupPanelExpanded.map { _ in () }.eraseToAnyPublisher(),
+            appState.$message.map { _ in () }.eraseToAnyPublisher(),
+            appState.$hideOfflineLamps.map { _ in () }.eraseToAnyPublisher()
+        )
+        .debounce(for: .milliseconds(120), scheduler: RunLoop.main)
+        .sink { [weak self] _ in
+            self?.updatePopoverSize(animated: false)
+        }
+        .store(in: &cancellables)
+
+        // Resize when the lamp list shape changes (count / visibility), not on every property update.
+        appState.$lamps
+            .map { lamps in lamps.map { "\($0.id):\($0.online)" }.joined(separator: ",") }
+            .removeDuplicates()
+            .debounce(for: .milliseconds(250), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 self?.updatePopoverSize(animated: false)
             }
@@ -44,16 +64,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         item.button?.action = #selector(statusItemClicked)
         item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
         statusItem = item
-        
-        // Update icon when app state changes (A4: Dynamic icon)
-        appState.objectWillChange
-            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
-            .sink { [weak self] _ in
-                if let item = self?.statusItem {
-                    self?.updateStatusItemIcon(for: item)
-                }
+
+        // PERF: only refresh status item icon when state truly impacting the icon changes.
+        Publishers.MergeMany(
+            appState.$lamps
+                .map { lamps in lamps.contains { $0.power && $0.online } }
+                .removeDuplicates()
+                .map { _ in () }
+                .eraseToAnyPublisher(),
+            appState.$circadianSettings
+                .map { $0.isEnabled }
+                .removeDuplicates()
+                .map { _ in () }
+                .eraseToAnyPublisher()
+        )
+        .debounce(for: .milliseconds(400), scheduler: RunLoop.main)
+        .sink { [weak self] _ in
+            if let item = self?.statusItem {
+                self?.updateStatusItemIcon(for: item)
             }
-            .store(in: &cancellables)
+        }
+        .store(in: &cancellables)
     }
     
     private func updateStatusItemIcon(for item: NSStatusItem) {

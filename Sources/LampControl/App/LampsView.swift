@@ -20,6 +20,13 @@ struct LampsView: View {
     }
 
     private var content: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            scrollableContent
+        }
+        .scrollIndicators(.never)
+    }
+
+    private var scrollableContent: some View {
         VStack(spacing: LCSpacing.sm) {
             statusBar
 
@@ -134,24 +141,30 @@ struct LampsView: View {
                                 } label: {
                                     Text(L10n.roomAllOn)
                                         .font(LCTypo.microSemibold())
+                                        .lineLimit(1)
+                                        .fixedSize(horizontal: true, vertical: false)
                                         .foregroundStyle(accent)
                                         .padding(.horizontal, LCSpacing.sm)
                                         .frame(height: 26)
                                 }
                                 .buttonStyle(LCPressableButtonStyle())
                                 .lcChip(tint: accent.opacity(0.18))
+                                .fixedSize()
 
                                 Button {
                                     Task { await appState.setPowerForRoom(room.id, value: false) }
                                 } label: {
                                     Text(L10n.roomAllOff)
                                         .font(LCTypo.microSemibold())
+                                        .lineLimit(1)
+                                        .fixedSize(horizontal: true, vertical: false)
                                         .foregroundStyle(muted)
                                         .padding(.horizontal, LCSpacing.sm)
                                         .frame(height: 26)
                                 }
                                 .buttonStyle(LCPressableButtonStyle())
                                 .lcChip(tint: Color.white.opacity(0.06))
+                                .fixedSize()
 
                                 Menu {
                                     ForEach(appState.userScenes) { scene in
@@ -840,7 +853,6 @@ private struct LampRow: View {
                     lineWidth: appState.selectedLampIds.contains(lamp.id) ? 1.5 : 0
                 )
         )
-        .lcHoverable(glowTint: lamp.power ? .yellow : LCPalette.accent, radius: LCRadius.card)
         .animation(LCAnimation.standard, value: showsAdvancedControls)
     }
 

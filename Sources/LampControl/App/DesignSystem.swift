@@ -109,8 +109,11 @@ enum LCPalette {
 // MARK: - Background
 
 /// The popover backdrop. Two layered gradients + a `.regularMaterial` rectangle
-/// give the "quiet glass" sensation: soft chromatic warmth at the top, a
-/// neutral neutral mid, and a subtle accent halo bottom-trailing.
+/// give the "quiet glass" sensation.
+///
+/// PERF: rasterised once with `.drawingGroup()` so the multi-layer gradient
+/// stack does not recompose on every body re-eval of the parent (popover
+/// hosts a live AppState, so the parent re-evals frequently).
 struct LCBackdrop: View {
     var body: some View {
         ZStack {
@@ -124,7 +127,6 @@ struct LCBackdrop: View {
                 endPoint: .bottomTrailing
             )
 
-            // Soft accent halo
             RadialGradient(
                 colors: [
                     Color(nsColor: .controlAccentColor).opacity(0.16),
@@ -137,7 +139,6 @@ struct LCBackdrop: View {
             .blendMode(.plusLighter)
             .opacity(0.6)
 
-            // Specular highlight band
             LinearGradient(
                 colors: [
                     Color.white.opacity(0.10),
@@ -151,6 +152,7 @@ struct LCBackdrop: View {
 
             Rectangle().fill(.regularMaterial).opacity(0.45)
         }
+        .drawingGroup(opaque: false, colorMode: .nonLinear)
         .ignoresSafeArea()
     }
 }
@@ -158,6 +160,12 @@ struct LCBackdrop: View {
 // MARK: - Card / Chip / Button modifiers
 
 /// Card surface — Level 1 elevation. Use on lamp rows, settings groups, etc.
+///
+/// PERF: on macOS < 26 we previously stacked `.regularMaterial` + tinted bg +
+/// linear gradient specular overlay + linear gradient stroke border. With ~10
+/// cards visible × 4 layers, that's ~40 GPU passes per frame. We now use a
+/// simple `.regularMaterial` + flat tint + single solid stroke. The luxury
+/// gradients stay on macOS 26+ where `.glassEffect` is GPU-accelerated.
 private struct LCCardModifier: ViewModifier {
     var radius: CGFloat = LCRadius.card
     var tint: Color? = nil
@@ -168,51 +176,24 @@ private struct LCCardModifier: ViewModifier {
             if let tint {
                 content
                     .glassEffect(.regular.tint(tint.opacity(0.30)), in: shape)
-                    .overlay(strokeOverlay(radius: radius))
                     .contentShape(shape)
             } else {
                 content
                     .glassEffect(.regular, in: shape)
-                    .overlay(strokeOverlay(radius: radius))
                     .contentShape(shape)
             }
         } else {
             content
-                .background(.ultraThinMaterial, in: shape)
+                .background(.regularMaterial, in: shape)
                 .background(
-                    (tint ?? Color.white.opacity(0.04))
-                        .opacity(0.55),
+                    (tint ?? Color.white.opacity(0.03)),
                     in: shape
                 )
-                .overlay(specularOverlay(radius: radius))
-                .overlay(strokeOverlay(radius: radius))
+                .overlay(
+                    shape.strokeBorder(LCPalette.strokeMid, lineWidth: 0.5)
+                )
                 .contentShape(shape)
         }
-    }
-
-    private func strokeOverlay(radius: CGFloat) -> some View {
-        RoundedRectangle(cornerRadius: radius, style: .continuous)
-            .strokeBorder(
-                LinearGradient(
-                    colors: [LCPalette.strokeHi, LCPalette.strokeMid, LCPalette.strokeLo],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ),
-                lineWidth: 0.5
-            )
-            .allowsHitTesting(false)
-    }
-
-    private func specularOverlay(radius: CGFloat) -> some View {
-        RoundedRectangle(cornerRadius: radius, style: .continuous)
-            .fill(
-                LinearGradient(
-                    colors: [Color.white.opacity(0.12), Color.clear],
-                    startPoint: .top,
-                    endPoint: .center
-                )
-            )
-            .allowsHitTesting(false)
     }
 }
 
@@ -233,9 +214,10 @@ private struct LCChipModifier: ViewModifier {
                     .contentShape(shape)
             }
         } else {
+            // PERF: single material + flat tint + thin stroke.
             content
                 .background(.thinMaterial, in: shape)
-                .background((tint ?? Color.white.opacity(0.06)).opacity(0.70), in: shape)
+                .background((tint ?? Color.white.opacity(0.05)), in: shape)
                 .overlay(
                     shape.strokeBorder(LCPalette.strokeMid, lineWidth: 0.5)
                 )
@@ -276,8 +258,13 @@ struct LCPressableButtonStyle: ButtonStyle {
 
 // MARK: - Glass Button Style (Quiet Glass)
 
-/// Prominent / regular glass button. Pairs a glass surface with the press
-/// micro-interaction and a hoverable highlight ring.
+/// Prominent / regular glass button. Glass surface + press micro-interaction.
+///
+/// PERF: hover ring removed by default. The previous version embedded
+/// `LCHoverable` (a `@State`-tracking modifier) inside the style, so every
+/// chip / glass button on screen re-rendered on every mouse move within the
+/// popover. Re-enable per-instance via `.lcHoverable()` for a few CTA buttons
+/// only — never on lists.
 struct LCGlassButtonStyle: ButtonStyle {
     var prominent: Bool = false
     var radius: CGFloat = LCRadius.button
@@ -288,7 +275,6 @@ struct LCGlassButtonStyle: ButtonStyle {
                 radius: radius,
                 tint: prominent ? LCPalette.accent.opacity(0.45) : Color.white.opacity(0.06)
             ))
-            .modifier(LCHoverable(glowTint: prominent ? LCPalette.accent : Color.white, radius: radius))
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
             .opacity(configuration.isPressed ? 0.92 : 1.0)
             .animation(LCAnimation.micro, value: configuration.isPressed)
@@ -391,6 +377,8 @@ struct LCIconBadge: View {
 }
 
 /// Small pulsing status dot.
+/// PERF: when `animated == false`, no animation modifier is attached at all, so
+/// SwiftUI does not register a recurring tick on every visible dot.
 struct LCStatusDot: View {
     var color: Color = LCPalette.accent
     var animated: Bool = false
@@ -399,15 +387,27 @@ struct LCStatusDot: View {
         ZStack {
             Circle().fill(color.opacity(0.85)).frame(width: 6, height: 6)
             if animated {
-                Circle()
-                    .stroke(color.opacity(0.5), lineWidth: 1.5)
-                    .frame(width: 6, height: 6)
-                    .scaleEffect(2.4)
-                    .opacity(0)
-                    .animation(.easeOut(duration: 1.4).repeatForever(autoreverses: false), value: animated)
+                PulsingRing(color: color)
             }
         }
         .frame(width: 12, height: 12)
+    }
+}
+
+/// Isolated subview so the `repeatForever` animation is created only when the dot
+/// is actually animated, and torn down cleanly when it disappears.
+private struct PulsingRing: View {
+    let color: Color
+    @State private var animate = false
+
+    var body: some View {
+        Circle()
+            .stroke(color.opacity(0.5), lineWidth: 1.5)
+            .frame(width: 6, height: 6)
+            .scaleEffect(animate ? 2.4 : 1.0)
+            .opacity(animate ? 0 : 0.8)
+            .animation(.easeOut(duration: 1.4).repeatForever(autoreverses: false), value: animate)
+            .onAppear { animate = true }
     }
 }
 

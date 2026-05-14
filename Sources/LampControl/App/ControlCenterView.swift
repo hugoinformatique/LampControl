@@ -63,7 +63,6 @@ struct ControlCenterView: View {
                         size: 36,
                         tint: LCPalette.accent,
                         fontSize: 16)
-                .lcHoverable(glowTint: LCPalette.accent, radius: 18)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("LampControl")
