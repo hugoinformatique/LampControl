@@ -8,6 +8,37 @@ All notable changes to LampControl are documented here. The format follows
 
 ### Planned
 
+## [1.3.3] - 2026-05-14
+
+### Fixed
+
+- **Sparkle auto-update was broken since 1.3.0.** `SUFeedURL` pointed at the
+  GitHub `releases/latest` REST endpoint, which returns JSON. Sparkle expects
+  an XML appcast, so every "Check for updates" returned
+  *"Erreur pendant la mise à jour"*. Repointed the feed at
+  `https://hugoinformatique.github.io/LampControl/appcast.xml` (the appcast
+  the release workflow already publishes to GitHub Pages on every tag).
+  Also fixed the typo in the previous URL host (`hugo-informatique` →
+  `hugoinformatique`).
+- **"Vérifier automatiquement" / "Installer automatiquement" toggles did
+  nothing and reset on every launch.** `UpdateService` held them as plain
+  `@Published` Bools that were never read from nor written to Sparkle.
+  Toggling them now updates `SPUUpdater.automaticallyChecksForUpdates`
+  and `automaticallyDownloadsUpdates` (Sparkle persists them in
+  `UserDefaults` under their canonical keys), and the seed values are
+  loaded from Sparkle on init so the UI matches reality at launch.
+- **App did not check for updates on launch even with auto-checks
+  enabled.** `UpdateService.start()` was a no-op. It now triggers
+  `checkForUpdatesInBackground()` once at launch when auto-checks are
+  enabled — previously users could wait up to 24h for the next scheduled
+  Sparkle poll.
+
+> **Manual install required this time:** users currently on 1.3.0/1.3.1/
+> 1.3.2 cannot auto-update to 1.3.3 because their installed bundle still
+> carries the broken JSON `SUFeedURL`. Download the 1.3.3 DMG manually
+> from the Releases page once; auto-update will work for every release
+> after that.
+
 ## [1.3.2] - 2026-05-14
 
 ### Changed

@@ -21,7 +21,7 @@
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>1.3.2</string>
+  <string>1.3.3</string>
   <key>CFBundleVersion</key>
   <string>16</string>
   <key>LSMinimumSystemVersion</key>
@@ -35,7 +35,7 @@
   <key>CFBundleIconFile</key>
   <string>AppIcon</string>
   <key>SUFeedURL</key>
-  <string>https://api.github.com/repos/hugo-informatique/lampcontrol/releases/latest</string>
+  <string>https://hugoinformatique.github.io/LampControl/appcast.xml</string>
   <key>SUPublicEDKey</key>
   <string>YOUR_PUBLIC_KEY_HERE</string>
   <key>SUEnableAutomaticChecks</key>
