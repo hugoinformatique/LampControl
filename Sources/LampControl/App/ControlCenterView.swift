@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ControlCenterView: View {
     @EnvironmentObject private var appState: AppState
-    @Namespace private var tabNamespace
 
     var body: some View {
         ZStack {
@@ -26,16 +25,14 @@ struct ControlCenterView: View {
 
     private var content: some View {
         VStack(spacing: 0) {
-            // Sticky chrome (header + tabs) with its own opaque-ish surface so
-            // the scrolling content below cannot bleed through visually.
+            // Sticky chrome — opaque so scrolling content can't bleed through.
+            // We layer a window-coloured fill UNDER the regular material so dark
+            // mode does not stay translucent against the popover backdrop.
             VStack(spacing: LCSpacing.xs) {
                 header
                     .padding(.horizontal, LCSpacing.lg)
                     .padding(.top, LCSpacing.md)
-
-                tabStrip
-                    .padding(.horizontal, LCSpacing.lg)
-                    .padding(.bottom, LCSpacing.xs)
+                    .padding(.bottom, LCSpacing.sm)
 
                 if !appState.message.isEmpty {
                     messageBanner
@@ -44,12 +41,18 @@ struct ControlCenterView: View {
                         .transition(.opacity)
                 }
             }
-            .background(.regularMaterial)
+            .background(
+                ZStack {
+                    Color(nsColor: .windowBackgroundColor)
+                    Rectangle().fill(.regularMaterial)
+                }
+            )
             .overlay(alignment: .bottom) {
                 Rectangle()
                     .fill(LCPalette.separator)
                     .frame(height: 0.5)
             }
+            .zIndex(1)
 
             // Scrollable content area gets all remaining vertical space.
             Group {
@@ -63,6 +66,7 @@ struct ControlCenterView: View {
             .padding(.bottom, LCSpacing.md)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .layoutPriority(1)
+            .clipped()
         }
     }
 
@@ -76,7 +80,7 @@ struct ControlCenterView: View {
                         fontSize: 16)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("LampControl")
+                Text(headerTitle)
                     .font(LCTypo.title())
                     .lcTrackedTitle()
                     .foregroundStyle(LCPalette.ink)
@@ -92,15 +96,20 @@ struct ControlCenterView: View {
 
             Spacer(minLength: LCSpacing.xs)
 
-            circleIconButton(icon: "gearshape", help: "settings.title") {
-                withAnimation(LCAnimation.snap) {
-                    appState.selectedTab = .settings
-                }
+            circleIconButton(
+                icon: appState.selectedTab == .settings ? "lightbulb.2" : "gearshape",
+                help: appState.selectedTab == .settings ? "tab.lamps" : "settings.title"
+            ) {
+                appState.selectedTab = appState.selectedTab == .settings ? .lamps : .settings
             }
 
             circleIconButton(icon: "xmark", help: "app.quit", action: appState.quit)
         }
         .frame(height: 56)
+    }
+
+    private var headerTitle: LocalizedStringKey {
+        appState.selectedTab == .settings ? "settings.title" : "LampControl"
     }
 
     private func circleIconButton(icon: String,
@@ -114,52 +123,6 @@ struct ControlCenterView: View {
         }
         .buttonStyle(LCGlassButtonStyle(prominent: false, radius: 16))
         .help(help)
-    }
-
-    // MARK: - Tab strip
-
-    private var tabStrip: some View {
-        HStack(spacing: LCSpacing.lg) {
-            tabButton(.lamps, title: "tab.lamps", icon: "slider.horizontal.3")
-            tabButton(.settings, title: "tab.settings", icon: "gearshape")
-            Spacer(minLength: 0)
-        }
-        .frame(height: 36)
-    }
-
-    private func tabButton(_ tab: ControlTab,
-                           title: LocalizedStringKey,
-                           icon: String) -> some View {
-        let isActive = appState.selectedTab == tab
-
-        return Button {
-            appState.selectedTab = tab
-        } label: {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 6) {
-                    Image(systemName: icon)
-                        .font(.system(size: 12, weight: .semibold))
-                    Text(title)
-                        .font(LCTypo.bodySemibold())
-                }
-                .foregroundStyle(isActive ? LCPalette.ink : LCPalette.muted)
-
-                Group {
-                    if isActive {
-                        Capsule(style: .continuous)
-                            .fill(LCPalette.accent)
-                            .matchedGeometryEffect(id: "tab.indicator", in: tabNamespace)
-                    } else {
-                        Capsule(style: .continuous)
-                            .fill(Color.clear)
-                    }
-                }
-                .frame(height: 2)
-            }
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(LCPressableButtonStyle())
-        .animation(LCAnimation.micro, value: isActive)
     }
 
     // MARK: - Message banner

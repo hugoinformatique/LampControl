@@ -597,9 +597,9 @@ final class AppState: ObservableObject {
     }
 
     private var lampsPopoverHeight: CGFloat {
-        // Quiet Glass redesign metrics (real measured heights):
-        // header 56 + tabStrip 44 + outer paddings 28 = ~128pt fixed chrome
-        var h: CGFloat = 128
+        // Quiet Glass v2: tab strip removed (gear/back lives in the header).
+        // header 56 + outer paddings 28 = ~84pt fixed chrome
+        var h: CGFloat = 84
 
         if !message.isEmpty { h += 56 }
 
