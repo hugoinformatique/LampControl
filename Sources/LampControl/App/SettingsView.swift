@@ -1208,50 +1208,53 @@ struct SettingsView: View {
     }
 
     private var setupSummary: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 11) {
-                ZStack {
-                    Circle()
-                        .stroke(LCTheme.softAccent.opacity(0.45), lineWidth: 4)
-                    Circle()
-                        .trim(from: 0, to: setupProgress)
-                        .stroke(accent, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                        .rotationEffect(.degrees(-90))
-                    Text("\(completedSetupCount)/\(setupSteps.count)")
-                        .font(.system(size: 10, weight: .bold))
-                }
-                .frame(width: 44, height: 44)
+        VStack(spacing: LCSpacing.sm) {
+            HStack(spacing: LCSpacing.sm) {
+                Image(systemName: isSetupComplete ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(isSetupComplete ? LCPalette.success : Color.orange)
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 1) {
                     Text(isSetupComplete ? "setup.complete" : "setup.incomplete")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(LCTypo.bodySemibold())
+                        .foregroundStyle(LCPalette.ink)
                     Text(isSetupComplete ? "setup.complete.detail" : "setup.incomplete.detail")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(muted)
+                        .font(LCTypo.micro())
+                        .foregroundStyle(LCPalette.muted)
+                        .lineLimit(1)
                 }
 
                 Spacer()
 
-                Button {
-                    openConfigurationGuide()
-                } label: {
+                Text("\(completedSetupCount)/\(setupSteps.count)")
+                    .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                    .foregroundStyle(LCPalette.muted)
+
+                Button(action: openConfigurationGuide) {
                     Image(systemName: "questionmark.circle")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(accent)
-                        .frame(width: 32, height: 32)
+                        .foregroundStyle(LCPalette.muted)
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
                 }
-                .liquidGlassButtonStyle()
+                .buttonStyle(LCPressableButtonStyle())
                 .help("setup.guide")
             }
 
-            HStack(spacing: 7) {
+            HStack(spacing: 4) {
                 ForEach(setupSteps) { step in
-                    SetupStepPill(step: step)
+                    Capsule(style: .continuous)
+                        .fill(step.isComplete ? LCPalette.accent : LCPalette.muted.opacity(0.18))
+                        .frame(height: 3)
                 }
             }
         }
-        .padding(14)
-        .liquidGlassSurface(radius: 22, tint: isSetupComplete ? Color.green.opacity(0.08) : Color.orange.opacity(0.08))
+        .padding(.horizontal, LCSpacing.sm)
+        .padding(.vertical, LCSpacing.sm)
+        .background(
+            RoundedRectangle(cornerRadius: LCRadius.card, style: .continuous)
+                .fill(LCPalette.muted.opacity(0.06))
+        )
     }
 
     private func settingsLink(_ route: SettingsRoute, icon: String, title: String, subtitle: String, tint: Color) -> some View {

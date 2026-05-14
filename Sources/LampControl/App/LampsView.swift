@@ -117,71 +117,53 @@ struct LampsView: View {
                         VStack(spacing: LCSpacing.xs) {
                             HStack(spacing: LCSpacing.xs) {
                                 Button {
-                                    withAnimation(LCAnimation.snap) {
-                                        if expandedRoomIds.contains(room.id) { expandedRoomIds.remove(room.id) } else { expandedRoomIds.insert(room.id) }
+                                    if expandedRoomIds.contains(room.id) { expandedRoomIds.remove(room.id) } else { expandedRoomIds.insert(room.id) }
+                                } label: {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: expandedRoomIds.contains(room.id) ? "chevron.down" : "chevron.right")
+                                            .font(.system(size: 9, weight: .bold))
+                                            .foregroundStyle(muted)
+                                            .frame(width: 12)
+                                        Text(room.name.uppercased())
+                                            .font(LCTypo.sectionHeader())
+                                            .tracking(0.6)
+                                            .foregroundStyle(muted)
+                                            .lineLimit(1)
                                     }
-                                } label: {
-                                    Image(systemName: expandedRoomIds.contains(room.id) ? "chevron.down" : "chevron.right")
-                                        .font(.system(size: 11, weight: .bold))
-                                        .foregroundStyle(muted)
-                                        .frame(width: 26, height: 26)
-                                        .contentShape(Rectangle())
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .contentShape(Rectangle())
                                 }
                                 .buttonStyle(LCPressableButtonStyle())
-
-                                Text(room.name.uppercased())
-                                    .font(LCTypo.sectionHeader())
-                                    .tracking(0.5)
-                                    .foregroundStyle(muted)
-
-                                Spacer()
-
-                                Button {
-                                    Task { await appState.setPowerForRoom(room.id, value: true) }
-                                } label: {
-                                    Text(L10n.roomAllOn)
-                                        .font(LCTypo.microSemibold())
-                                        .lineLimit(1)
-                                        .fixedSize(horizontal: true, vertical: false)
-                                        .foregroundStyle(accent)
-                                        .padding(.horizontal, LCSpacing.sm)
-                                        .frame(height: 26)
-                                }
-                                .buttonStyle(LCPressableButtonStyle())
-                                .lcChip(tint: accent.opacity(0.18))
-                                .fixedSize()
-
-                                Button {
-                                    Task { await appState.setPowerForRoom(room.id, value: false) }
-                                } label: {
-                                    Text(L10n.roomAllOff)
-                                        .font(LCTypo.microSemibold())
-                                        .lineLimit(1)
-                                        .fixedSize(horizontal: true, vertical: false)
-                                        .foregroundStyle(muted)
-                                        .padding(.horizontal, LCSpacing.sm)
-                                        .frame(height: 26)
-                                }
-                                .buttonStyle(LCPressableButtonStyle())
-                                .lcChip(tint: Color.white.opacity(0.06))
-                                .fixedSize()
 
                                 Menu {
-                                    ForEach(appState.userScenes) { scene in
-                                        Button(scene.title) { Task { await appState.applyScene(scene, toRoomId: room.id) } }
+                                    Button {
+                                        Task { await appState.setPowerForRoom(room.id, value: true) }
+                                    } label: { Label(L10n.roomAllOn, systemImage: "lightbulb.fill") }
+                                    Button {
+                                        Task { await appState.setPowerForRoom(room.id, value: false) }
+                                    } label: { Label(L10n.roomAllOff, systemImage: "lightbulb.slash") }
+                                    if !appState.userScenes.isEmpty {
+                                        Divider()
+                                        Section("Scènes") {
+                                            ForEach(appState.userScenes) { scene in
+                                                Button(scene.title) { Task { await appState.applyScene(scene, toRoomId: room.id) } }
+                                            }
+                                        }
                                     }
                                 } label: {
-                                    Image(systemName: "paintpalette")
-                                        .font(.system(size: 12, weight: .semibold))
-                                        .foregroundStyle(accent)
-                                        .frame(width: 26, height: 26)
+                                    Image(systemName: "ellipsis")
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundStyle(LCPalette.muted)
+                                        .frame(width: 28, height: 24)
                                         .contentShape(Rectangle())
                                 }
                                 .menuStyle(BorderlessButtonMenuStyle())
                                 .menuIndicator(.hidden)
+                                .fixedSize()
                             }
                             .padding(.horizontal, LCSpacing.xs)
-                            .padding(.vertical, LCSpacing.xxs)
+                            .padding(.top, LCSpacing.sm)
+                            .padding(.bottom, LCSpacing.xxs)
 
                             if expandedRoomIds.contains(room.id) {
                                 ForEach(roomLamps) { lamp in
@@ -200,8 +182,6 @@ struct LampsView: View {
                                 }
                             }
                         }
-                        .padding(LCSpacing.xs)
-                        .lcCard(radius: LCRadius.panel, tint: Color.white.opacity(0.025))
                     }
                 }
 
@@ -229,8 +209,6 @@ struct LampsView: View {
                                 }
                         }
                     }
-                    .padding(LCSpacing.xs)
-                    .lcCard(radius: LCRadius.panel, tint: Color.white.opacity(0.025))
                 }
             }
         }
@@ -289,62 +267,49 @@ struct LampsView: View {
 
     private var statusBar: some View {
         HStack(spacing: LCSpacing.sm) {
-            Image(systemName: appState.isAutoSyncing ? "arrow.triangle.2.circlepath" : "bolt.horizontal.circle")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(muted)
-                .lcPulseSymbol(active: appState.isAutoSyncing)
-
             Text(syncLabel)
-                .font(LCTypo.caption())
-                .foregroundStyle(muted)
+                .font(LCTypo.micro())
+                .foregroundStyle(LCPalette.muted)
                 .lineLimit(1)
 
-            Spacer(minLength: LCSpacing.xxs)
+            Text("·").foregroundStyle(LCPalette.muted.opacity(0.5))
 
-            HStack(spacing: 6) {
-                Label("\(appState.visibleLamps.count)", systemImage: "lightbulb.2")
-                    .font(.system(size: 11, weight: .semibold).monospacedDigit())
-                    .foregroundStyle(ink)
+            Text(L10n.onlineLamps(appState.visibleLamps.filter(\.online).count))
+                .font(LCTypo.micro())
+                .foregroundStyle(LCPalette.muted)
 
-                LCStatusDot(
-                    color: appState.visibleLamps.filter(\.online).count > 0 ? LCPalette.success : LCPalette.muted,
-                    animated: false
-                )
-                .frame(width: 8, height: 8)
-
-                Text(L10n.onlineLamps(appState.visibleLamps.filter(\.online).count))
-                    .font(LCTypo.micro())
-                    .foregroundStyle(muted)
-            }
+            Spacer(minLength: LCSpacing.xs)
 
             if appState.licenseState.entitlements.canUseAdaptiveLighting {
                 Button {
                     Task { await appState.setAdaptiveLighting(enabled: !appState.circadianSettings.isEnabled) }
                 } label: {
                     Image(systemName: appState.circadianSettings.isEnabled ? "sun.and.horizon.fill" : "sun.and.horizon")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(appState.circadianSettings.isEnabled ? Color.orange : muted.opacity(0.55))
-                        .frame(width: 30, height: 30)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(appState.circadianSettings.isEnabled ? Color.orange : LCPalette.muted.opacity(0.55))
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
                 }
-                .buttonStyle(LCGlassButtonStyle(prominent: appState.circadianSettings.isEnabled, radius: 15))
+                .buttonStyle(LCPressableButtonStyle())
                 .help(appState.circadianSettings.isEnabled ? "lamps.adaptive.disable" : "lamps.adaptive.enable")
             }
 
             Button { Task { await appState.syncLamps() } } label: {
                 Image(systemName: "arrow.clockwise")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(accent)
-                    .frame(width: 30, height: 30)
-                    .lcPulseSymbol(active: appState.isAutoSyncing)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(appState.isAutoSyncing ? LCPalette.muted : LCPalette.muted)
+                    .frame(width: 24, height: 24)
+                    .contentShape(Rectangle())
+                    .rotationEffect(.degrees(appState.isAutoSyncing ? 360 : 0))
+                    .animation(appState.isAutoSyncing ? .linear(duration: 1.0).repeatForever(autoreverses: false) : .default, value: appState.isAutoSyncing)
             }
-            .buttonStyle(LCGlassButtonStyle(prominent: false, radius: 15))
+            .buttonStyle(LCPressableButtonStyle())
             .disabled(appState.isBusy || !appState.canSync)
             .opacity(appState.isBusy || !appState.canSync ? 0.45 : 1)
             .help("lamps.sync.now")
         }
-        .padding(.horizontal, LCSpacing.sm)
-        .padding(.vertical, LCSpacing.xs)
-        .lcCard(radius: LCRadius.card)
+        .padding(.horizontal, LCSpacing.xxs)
+        .frame(height: 24)
     }
 
     private var premiumLimitCard: some View {

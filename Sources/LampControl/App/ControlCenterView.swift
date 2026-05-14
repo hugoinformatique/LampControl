@@ -25,33 +25,44 @@ struct ControlCenterView: View {
     // MARK: - Layout
 
     private var content: some View {
-        VStack(spacing: LCSpacing.sm) {
-            header
-                .padding(.horizontal, LCSpacing.lg)
-                .padding(.top, LCSpacing.md)
-
-            tabStrip
-                .padding(.horizontal, LCSpacing.lg)
-
-            if !appState.message.isEmpty {
-                messageBanner
+        VStack(spacing: 0) {
+            // Sticky chrome (header + tabs) with its own opaque-ish surface so
+            // the scrolling content below cannot bleed through visually.
+            VStack(spacing: LCSpacing.xs) {
+                header
                     .padding(.horizontal, LCSpacing.lg)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    .padding(.top, LCSpacing.md)
+
+                tabStrip
+                    .padding(.horizontal, LCSpacing.lg)
+                    .padding(.bottom, LCSpacing.xs)
+
+                if !appState.message.isEmpty {
+                    messageBanner
+                        .padding(.horizontal, LCSpacing.lg)
+                        .padding(.bottom, LCSpacing.xs)
+                        .transition(.opacity)
+                }
+            }
+            .background(.regularMaterial)
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(LCPalette.separator)
+                    .frame(height: 0.5)
             }
 
+            // Scrollable content area gets all remaining vertical space.
             Group {
                 switch appState.selectedTab {
-                case .lamps:
-                    LampsView()
-                        .transition(.opacity.combined(with: .move(edge: .leading)))
-                case .settings:
-                    SettingsView()
-                        .transition(.opacity.combined(with: .move(edge: .trailing)))
+                case .lamps:    LampsView()
+                case .settings: SettingsView()
                 }
             }
             .padding(.horizontal, LCSpacing.md)
+            .padding(.top, LCSpacing.sm)
             .padding(.bottom, LCSpacing.md)
-            .animation(LCAnimation.standard, value: appState.selectedTab)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .layoutPriority(1)
         }
     }
 
@@ -108,13 +119,12 @@ struct ControlCenterView: View {
     // MARK: - Tab strip
 
     private var tabStrip: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: LCSpacing.lg) {
             tabButton(.lamps, title: "tab.lamps", icon: "slider.horizontal.3")
             tabButton(.settings, title: "tab.settings", icon: "gearshape")
+            Spacer(minLength: 0)
         }
-        .padding(LCSpacing.xxs)
-        .lcCard(radius: 22, tint: Color.white.opacity(0.04))
-        .frame(height: 44)
+        .frame(height: 36)
     }
 
     private func tabButton(_ tab: ControlTab,
@@ -123,31 +133,33 @@ struct ControlCenterView: View {
         let isActive = appState.selectedTab == tab
 
         return Button {
-            withAnimation(LCAnimation.snap) {
-                appState.selectedTab = tab
-            }
+            appState.selectedTab = tab
         } label: {
-            ZStack {
-                if isActive {
-                    Capsule(style: .continuous)
-                        .fill(LCPalette.accent.opacity(0.95))
-                        .matchedGeometryEffect(id: "tab.indicator", in: tabNamespace)
-                        .shadow(color: LCPalette.accent.opacity(0.35), radius: 8, y: 2)
-                }
-
+            VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 6) {
                     Image(systemName: icon)
                         .font(.system(size: 12, weight: .semibold))
                     Text(title)
                         .font(LCTypo.bodySemibold())
                 }
-                .foregroundStyle(isActive ? Color.white : LCPalette.muted)
+                .foregroundStyle(isActive ? LCPalette.ink : LCPalette.muted)
+
+                Group {
+                    if isActive {
+                        Capsule(style: .continuous)
+                            .fill(LCPalette.accent)
+                            .matchedGeometryEffect(id: "tab.indicator", in: tabNamespace)
+                    } else {
+                        Capsule(style: .continuous)
+                            .fill(Color.clear)
+                    }
+                }
+                .frame(height: 2)
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 36)
             .contentShape(Rectangle())
         }
         .buttonStyle(LCPressableButtonStyle())
+        .animation(LCAnimation.micro, value: isActive)
     }
 
     // MARK: - Message banner

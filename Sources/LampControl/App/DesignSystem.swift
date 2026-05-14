@@ -76,14 +76,15 @@ enum LCTypo {
 // MARK: - Animation
 
 enum LCAnimation {
-    /// Default for layout / size / opacity changes that affect anything bigger than a button.
-    static let standard: Animation = .spring(response: 0.45, dampingFraction: 0.78)
+    /// Default for layout / size / opacity changes. Tight enough to feel snappy
+    /// in a popover (bigger springs feel laggy here; the popover itself is small).
+    static let standard: Animation = .spring(response: 0.28, dampingFraction: 0.86)
     /// Micro-interactions: hover, press, tab indicator.
-    static let micro:    Animation = .spring(response: 0.25, dampingFraction: 0.85)
+    static let micro:    Animation = .spring(response: 0.18, dampingFraction: 0.90)
     /// Sharp, snappy spring for toggle state changes.
-    static let snap:     Animation = .spring(response: 0.30, dampingFraction: 0.88)
+    static let snap:     Animation = .spring(response: 0.22, dampingFraction: 0.88)
     /// Plain fade.
-    static let fade:     Animation = .easeOut(duration: 0.20)
+    static let fade:     Animation = .easeOut(duration: 0.16)
 }
 
 // MARK: - Palette (semantic)
@@ -108,51 +109,28 @@ enum LCPalette {
 
 // MARK: - Background
 
-/// The popover backdrop. Two layered gradients + a `.regularMaterial` rectangle
-/// give the "quiet glass" sensation.
+/// The popover backdrop. A single base + soft accent halo. Quiet, no clutter.
 ///
-/// PERF: rasterised once with `.drawingGroup()` so the multi-layer gradient
-/// stack does not recompose on every body re-eval of the parent (popover
-/// hosts a live AppState, so the parent re-evals frequently).
+/// PERF: minimal stack (no nested materials, no specular band overlay) so the
+/// composer can rasterize this once and keep it. We previously used
+/// `.drawingGroup()` here but it caches `.regularMaterial` poorly on macOS
+/// 14/15 (text rendering inside the popover gets blurry shimmering).
 struct LCBackdrop: View {
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [
-                    Color(nsColor: .windowBackgroundColor).opacity(0.96),
-                    Color(nsColor: .controlBackgroundColor).opacity(0.92),
-                    Color(nsColor: .underPageBackgroundColor).opacity(0.96)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            Rectangle().fill(.regularMaterial)
 
             RadialGradient(
                 colors: [
-                    Color(nsColor: .controlAccentColor).opacity(0.16),
+                    Color(nsColor: .controlAccentColor).opacity(0.10),
                     Color.clear
                 ],
                 center: .topLeading,
-                startRadius: 4,
-                endRadius: 320
-            )
-            .blendMode(.plusLighter)
-            .opacity(0.6)
-
-            LinearGradient(
-                colors: [
-                    Color.white.opacity(0.10),
-                    Color.clear,
-                    Color.black.opacity(0.06)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
+                startRadius: 0,
+                endRadius: 280
             )
             .allowsHitTesting(false)
-
-            Rectangle().fill(.regularMaterial).opacity(0.45)
         }
-        .drawingGroup(opaque: false, colorMode: .nonLinear)
         .ignoresSafeArea()
     }
 }
