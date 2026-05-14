@@ -1,7 +1,9 @@
 # LampControl
 
-> One menu-bar app to drive **Tuya / Smart Life, Philips Hue, LIFX, Govee
-> and Yeelight** lamps from macOS. Native, lightweight, liquid-glass styled,
+> One menu-bar app to drive **Philips Hue, LIFX, Tuya / Smart Life, Govee,
+> Yeelight, Nanoleaf and WiZ** lamps from macOS. Also runs **Ledvance Smart+
+> Wi-Fi** and **Sylvania Smart Wi-Fi** through the Tuya integration (they
+> share the Smart Life backend). Native, lightweight, liquid-glass styled,
 > Keychain-secure.
 >
 > 🇫🇷 [Lire ce README en français](README.fr.md)
@@ -14,15 +16,21 @@ LampControl lives in your macOS menu bar. Click the lightbulb icon to toggle
 your lamps, change brightness, pick a colour, or apply a group scene without
 leaving whatever you're doing.
 
-It speaks to **five ecosystems in parallel**:
+It speaks to **seven ecosystems in parallel**:
 
 | Brand | Access | Internet? |
 | --- | --- | --- |
-| Tuya / Smart Life | Cloud (Access ID + Secret + UID) | Yes |
 | Philips Hue | Local bridge (LAN) | No |
 | LIFX | Cloud (personal token) | Yes |
+| Tuya / Smart Life | Cloud (Access ID + Secret + UID) | Yes |
 | Govee | Cloud (Developer API key) | Yes |
 | Yeelight | Direct LAN (developer mode) | No |
+| Nanoleaf | Local LAN (auth token) | No |
+| WiZ | Direct LAN (UDP) | No |
+
+**Compatible OEMs (no extra setup):** Ledvance Smart+ Wi-Fi and Sylvania
+Smart Wi-Fi bulbs use the Tuya / Smart Life backend — pair them in the
+Smart Life app, then they appear under the Tuya integration in LampControl.
 
 Configure as many or as few as you like — lamps from every connected
 provider show up in a single sorted list.
@@ -32,7 +40,7 @@ provider show up in a single sorted list.
 ## Features
 
 - 🪶 **Lightweight menu-bar app** — no dock icon, no Electron, ~5 MB.
-- 🌐 **Five providers in one app** — Tuya, Hue, LIFX, Govee, Yeelight.
+- 🌐 **Seven providers in one app** — Hue, LIFX, Tuya, Govee, Yeelight, Nanoleaf, WiZ (also covers Ledvance & Sylvania Smart Wi-Fi via Tuya).
 - 💡 **Toggle, dim and recolour** any compatible bulb.
 - 🎨 **Group scenes** — select multiple RGB lamps and apply one colour.
 - 🔁 **Auto-sync** every 60 seconds, silently in the background.

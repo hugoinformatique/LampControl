@@ -1,8 +1,10 @@
 # LampControl
 
-> Une seule app de barre de menu pour piloter vos ampoules **Tuya / Smart
-> Life, Philips Hue, LIFX, Govee et Yeelight** depuis macOS. Native, légère,
-> en verre liquide, et sécurisée par le Keychain.
+> Une seule app de barre de menu pour piloter vos ampoules **Philips Hue,
+> LIFX, Tuya / Smart Life, Govee, Yeelight, Nanoleaf et WiZ** depuis macOS.
+> Pilote aussi les **Ledvance Smart+ Wi-Fi** et les **Sylvania Smart Wi-Fi**
+> via l'intégration Tuya (elles partagent le backend Smart Life). Native,
+> légère, en verre liquide, et sécurisée par le Keychain.
 >
 > 🇬🇧 [Read this README in English](README.md)
 
@@ -15,15 +17,22 @@ suffit pour allumer vos lampes, changer la luminosité, choisir une couleur ou
 appliquer une scène à un groupe — sans interrompre ce que vous êtes en train
 de faire.
 
-L'app gère **cinq écosystèmes en parallèle** :
+L'app gère **sept écosystèmes en parallèle** :
 
 | Marque | Type d'accès | Internet ? |
 | --- | --- | --- |
-| Tuya / Smart Life | Cloud (Access ID + Secret + UID) | Oui |
 | Philips Hue | Bridge local (LAN) | Non |
 | LIFX | Cloud (token personnel) | Oui |
+| Tuya / Smart Life | Cloud (Access ID + Secret + UID) | Oui |
 | Govee | Cloud (clé API Developer) | Oui |
 | Yeelight | LAN direct (mode développeur) | Non |
+| Nanoleaf | LAN local (token d'auth) | Non |
+| WiZ | LAN direct (UDP) | Non |
+
+**OEM compatibles (sans config supplémentaire)** : les ampoules Ledvance
+Smart+ Wi-Fi et Sylvania Smart Wi-Fi utilisent le backend Tuya / Smart Life.
+Appairez-les dans l'app Smart Life, puis elles apparaissent dans LampControl
+sous l'intégration Tuya.
 
 Activez-en autant que vous voulez — les lampes de tous les fournisseurs
 configurés apparaissent dans une seule liste triée.
@@ -33,7 +42,7 @@ configurés apparaissent dans une seule liste triée.
 ## Fonctionnalités
 
 - 🪶 **App barre de menu légère** — pas d'icône Dock, pas d'Electron, ~5 Mo.
-- 🌐 **Cinq fournisseurs dans une seule app** — Tuya, Hue, LIFX, Govee, Yeelight.
+- 🌐 **Sept fournisseurs dans une seule app** — Hue, LIFX, Tuya, Govee, Yeelight, Nanoleaf, WiZ (couvre aussi Ledvance & Sylvania Smart Wi-Fi via Tuya).
 - 💡 **Allumer, varier, recolorer** n'importe quelle ampoule compatible.
 - 🎨 **Scènes groupées** — sélectionnez plusieurs lampes RGB et appliquez une
   même couleur.

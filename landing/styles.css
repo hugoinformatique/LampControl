@@ -186,10 +186,13 @@ summary:focus-visible {
 .hero {
   position: relative;
   overflow: hidden;
-  min-height: calc(100vh - 73px);
+  /* No more 100vh: on a 13" laptop the title alone took ~2/3 of the viewport.
+     Let content drive the height; pad enough to feel like a hero, not so much
+     it pushes everything below the fold. */
+  min-height: 540px;
   display: flex;
   align-items: center;
-  padding: 88px 0 72px;
+  padding: 56px 0 48px;
 }
 
 .pixel-field {
@@ -266,9 +269,13 @@ p {
 h1 {
   max-width: 780px;
   margin-top: 22px;
-  font-size: clamp(44px, 8vw, 82px);
-  line-height: 0.95;
-  letter-spacing: 0;
+  /* Was clamp(44, 8vw, 82). At 82px the heading wrapped to 5 lines on a
+     13" Air, eating most of the viewport. Cap at 56px and tighten the
+     vertical so a wrapped heading still feels purposeful, not bloated. */
+  font-size: clamp(36px, 5.4vw, 56px);
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 
 .hero-subtitle {
