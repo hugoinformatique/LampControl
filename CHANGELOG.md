@@ -8,6 +8,56 @@ All notable changes to LampControl are documented here. The format follows
 
 ### Planned
 
+## [1.3.2] - 2026-05-14
+
+### Changed
+
+- **Quiet Glass UI redesign.** Introduce a dedicated `DesignSystem.swift`
+  (tokens for spacing, radius, typography, animation, palette) and rebuild
+  the popover with an opinionated, premium "quiet glass" direction:
+  - Native `.glassEffect(.regular)` on macOS 26+ (with `.tint` and
+    `.interactive` variants), layered material fallback on macOS 13–25
+    (`.regularMaterial` + window-coloured base + thin gradient border).
+  - Sticky chrome (header + optional message banner) with an opaque
+    background so scrolling content cannot bleed through.
+  - Tab strip removed entirely. The header gear icon now toggles
+    Lamps ↔ Settings, and the title swaps so the user always knows
+    which surface they are on.
+  - Stripped per-section card wrappers (status bar, room groups,
+    unassigned section). Premium apps use layout/typography for hierarchy,
+    not stacked glass cards.
+  - Room headers replace the cluttered "All on / All off / palette" chip
+    bar with one overflow `…` menu — fixes the long-room-name wrap
+    (e.g. "CHAMBRE" wrapping to two lines in French).
+  - Setup-summary card in Settings is lighter: a single check icon +
+    label + thin progress capsules (one per setup step) instead of the
+    heavy 4/4 ring on a green-tinted card.
+
+### Performance
+
+- **Popover reaches 60 FPS again.** Three big offenders fixed:
+  1. Removed `.lcHoverable` from `LampRow`, `SettingsView` provider /
+     link rows, and from inside `LCGlassButtonStyle`. The modifier holds
+     `@State isHovering` and re-renders every row on every mouse move.
+  2. Simplified `LCBackdrop` to a single `.regularMaterial` + soft accent
+     halo (previous `.drawingGroup()` cache was making text shimmer on
+     macOS 14/15).
+  3. Shortened `LCAnimation` tokens (standard 0.45 → 0.28, micro 0.25 →
+     0.18) — long springs feel laggy in a small popover.
+
+### Fixed
+
+- Popover bottom no longer clipped on the Lamps tab. Recomputed the
+  popover height with real Quiet Glass metrics; the inner ScrollView
+  now absorbs overflow with `.frame(maxHeight: .infinity).layoutPriority(1)`
+  so the chrome cannot compress the content.
+- Search-bar clear button (`xmark.circle.fill`) hit-target restored
+  via explicit `.frame(22, 22) + .contentShape(Circle())`.
+- Header / Settings overlap on dark mode (regular material was too
+  translucent against the popover backdrop) — chrome now layers a
+  `Color(nsColor: .windowBackgroundColor)` fill under the material and
+  uses `.zIndex(1)` + `.clipped()` to fence the scroll area.
+
 ## [1.3.1] - 2026-05-13
 
 ### Fixed
